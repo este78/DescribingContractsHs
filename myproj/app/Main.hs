@@ -1,6 +1,6 @@
 module Main where
 
-import Lib
+import Contracts
 
 main :: IO ()
-main = someFunc
+main = noTestsYet
