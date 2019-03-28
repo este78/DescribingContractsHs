@@ -1,7 +1,7 @@
 module Main where
 
-import Contracts
-import Pprint
+import src.Contract
+import src.Pprint
 
 main :: IO ()
 main = printf "something works" 
