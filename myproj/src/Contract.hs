@@ -47,10 +47,10 @@ data Contract =
   deriving Show
 
 --newtype Obs a = Obs (Date -> a)
-newtype Obs a = Obs (Date ->PR a)
+newtype Obs a = Obs (Date -> a)
 
 instance Show a => Show (Obs a) where
-  show (Obs o) = let (PR (rv:_)) = o time0 in "(Obs " ++ show rv ++ ")"
+  show (Obs o) = let  (rv:_) = o time0 in "(Obs " ++ show rv ++ ")"
 
 
 --Primitives for Defining Contracts  
@@ -89,7 +89,6 @@ andGive :: Contract -> Contract -> Contract
 andGive c d = c `cAnd` give d
 
 --Primitives over observables 
-
 konst :: a -> Obs a					--konst x is an observable that has value x at any time
 konst k = Obs (\t -> bigK k)
 
