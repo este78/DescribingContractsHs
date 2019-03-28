@@ -69,24 +69,24 @@ cAnd = And
 cOr :: Contract -> Contract -> Contract
 cOr = Or
 
-cond :: Obs Bool -> Contract -> Contract -> Contract
-cond = Cond
+-- cond :: Obs Bool -> Contract -> Contract -> Contract
+-- cond = Cond
 
-scale :: Obs Double -> Contract -> Contract
-scale = Scale
+-- scale :: Obs Double -> Contract -> Contract
+-- scale = Scale
 
-cWhen :: Obs Bool -> Contract -> Contract
-cWhen = When
+-- cWhen :: Obs Bool -> Contract -> Contract
+-- cWhen = When
 
-anytime :: Obs Bool -> Contract -> Contract
-anytime = Anytime
+-- anytime :: Obs Bool -> Contract -> Contract
+-- anytime = Anytime
 
-cUntil :: Obs Bool -> Contract -> Contract
-cUntil = Until
+-- cUntil :: Obs Bool -> Contract -> Contract
+-- cUntil = Until
 
---Other combinator derived from the primitives above
-andGive :: Contract -> Contract -> Contract
-andGive c d = c `cAnd` give d
+-- --Other combinator derived from the primitives above
+-- andGive :: Contract -> Contract -> Contract
+-- andGive c d = c `cAnd` give d
 
 -- --Primitives over observables 
 -- konst :: a -> Obs a					--konst x is an observable that has value x at any time
