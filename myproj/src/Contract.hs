@@ -3,13 +3,13 @@
 
 module Contract where
  
---import List
---import Numeric
---import Control.Monad
+import List
+import Numeric
+import Control.Monad
 import Data.Maybe
---import System
+import System
 --import Text.XHtml.Strict
---import Data.Unique
+import Data.Unique
 
 --Notational conventions from paper
 --c, d, u : Contract
@@ -50,7 +50,7 @@ data Contract =
 newtype Obs a = Obs (Date -> a)
 
 instance Show a => Show (Obs a) where
-  show (Obs o) = let  (rv:_) = o time0 in "(Obs " ++ show rv ++ ")"
+  show (Obs o) = o in "(Obs " ++ show o ++ ")"
 
 
 --Primitives for Defining Contracts  
