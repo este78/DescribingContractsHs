@@ -50,7 +50,7 @@ data Contract =
 newtype Obs a = Obs (Date -> a)
 
 instance Show a => Show (Obs a) where
-  show (Obs o) = "(Obs " ++ show o ++ ")"
+  show (Obs o) = "(Obs " ++ o ++ ")"
 
 
 --Primitives for Defining Contracts  
