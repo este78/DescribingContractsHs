@@ -94,14 +94,14 @@ konst k = Obs (\t -> bigK k)
 
 
 lift :: (a -> b) -> Obs a -> Obs b
-lift f (Obs o) = Obs (\t -> PR $ map (map f) (unPr $ o t))
+lift f (Obs o) = Obs (f o)
 
 lift2 :: (a -> b -> c) -> Obs a -> Obs b -> Obs c
-lift2 f (Obs o1) (Obs o2) = Obs (\t -> PR $ zipWith (zipWith f) (unPr $ o1 t) (unPr $ o2 t))
+lift2 f (Obs o1) (Obs o2) = Obs (f (f o1) (f o2))
 
 --"The value of the observable date at date t is just t."
 date :: Obs Date
-date = Obs (\t -> PR $ timeSlices [t])
+--date = Obs (\t -> PR $ timeSlices [t])
 
 --"All numeric operations lift to the Obs type. The implementation is simple,
 --using lift and lift2."
