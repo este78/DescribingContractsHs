@@ -3,11 +3,11 @@
 
 module Contract where
  
-import List
+--import List
 import Numeric
 import Control.Monad
 import Data.Maybe
-import System
+--import System
 --import Text.XHtml.Strict
 import Data.Unique
 
