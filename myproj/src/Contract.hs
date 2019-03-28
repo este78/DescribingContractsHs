@@ -101,7 +101,7 @@ lift2 f (Obs o1) (Obs o2) = Obs (f (f o1) (f o2))
 
 --"The value of the observable date at date t is just t."
 date :: Obs Date
---date = Obs (\t -> PR $ timeSlices [t])
+date = Obs (\t -> t)
 
 --"All numeric operations lift to the Obs type. The implementation is simple,
 --using lift and lift2."
