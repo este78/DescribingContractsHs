@@ -1,6 +1,7 @@
 module Main where
 
 import Contracts
+import Pprint
 
 main :: IO ()
-main = noTestsYet
+main = printf "something works" 
