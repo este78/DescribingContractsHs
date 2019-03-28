@@ -50,7 +50,7 @@ data Contract =
 newtype Obs a = Obs (Date -> a)
 
 instance Show a => Show (Obs a) where
-  show (Obs o) = "(Obs " ++ Obs o ++ ")"
+  show (Obs o) = "(Obs " ++ show o ++ ")"
 
 
 --Primitives for Defining Contracts  
@@ -88,66 +88,66 @@ cUntil = Until
 andGive :: Contract -> Contract -> Contract
 andGive c d = c `cAnd` give d
 
---Primitives over observables 
-konst :: a -> Obs a					--konst x is an observable that has value x at any time
-konst k = Obs (\t -> bigK k)
+-- --Primitives over observables 
+-- konst :: a -> Obs a					--konst x is an observable that has value x at any time
+-- konst k = Obs (\t -> bigK k)
 
 
-lift :: (a -> b) -> Obs a -> Obs b
-lift f (Obs o) = Obs (map f o)
+-- lift :: (a -> b) -> Obs a -> Obs b
+-- lift f (Obs o) = Obs (map f o)
 
-lift2 :: (a -> b -> c) -> Obs a -> Obs b -> Obs c
-lift2 f (Obs o1) (Obs o2) = Obs (f (f o1) (f o2))
+-- lift2 :: (a -> b -> c) -> Obs a -> Obs b -> Obs c
+-- lift2 f (Obs o1) (Obs o2) = Obs (f (f o1) (f o2))
 
---"The value of the observable date at date t is just t."
-date :: Obs Date
-date = Obs (\t -> t)
+-- --"The value of the observable date at date t is just t."
+-- date :: Obs Date
+-- date = Obs (\t -> t)
 
---"All numeric operations lift to the Obs type. The implementation is simple,
---using lift and lift2."
-instance Num a => Num (Obs a) where
-  fromInteger i = konst (fromInteger i)
-  (+) = lift2 (+)
-  (-) = lift2 (-)
-  (*) = lift2 (*)
-  abs = lift abs
-  signum = lift signum
+-- --"All numeric operations lift to the Obs type. The implementation is simple,
+-- --using lift and lift2."
+-- instance Num a => Num (Obs a) where
+  -- fromInteger i = konst (fromInteger i)
+  -- (+) = lift2 (+)
+  -- (-) = lift2 (-)
+  -- (*) = lift2 (*)
+  -- abs = lift abs
+  -- signum = lift signum
 
---We need to define a stub for Eq to support the Num instance.
-instance Eq a => Eq (Obs a) where
-  (==) = undefined
+-- --We need to define a stub for Eq to support the Num instance.
+-- instance Eq a => Eq (Obs a) where
+  -- (==) = undefined
 
---We can't implement Eq on an Observable's function,
---but we can provide a lifted version of equality:
-(==*) :: Ord a => Obs a -> Obs a -> Obs Bool
-(==*) = lift2 (==)
+-- --We can't implement Eq on an Observable's function,
+-- --but we can provide a lifted version of equality:
+-- (==*) :: Ord a => Obs a -> Obs a -> Obs Bool
+-- (==*) = lift2 (==)
 
-at :: Date -> Obs Bool       --boolean observable that becomes True at time t
-at t = date ==* konst t
+-- at :: Date -> Obs Bool       --boolean observable that becomes True at time t
+-- at t = date ==* konst t
 
---defining relational operations to work as typeclasses
-(%<), (%<=), (%=), (%>=), (%>) :: Ord a => Obs a -> Obs a -> Obs Bool
-(%<)  = lift2 (<)
-(%<=) = lift2 (<=)
-(%=)  = lift2 (==)
-(%>=) = lift2 (>=)
-(%>)  = lift2 (>)
+-- --defining relational operations to work as typeclasses
+-- (%<), (%<=), (%=), (%>=), (%>) :: Ord a => Obs a -> Obs a -> Obs Bool
+-- (%<)  = lift2 (<)
+-- (%<=) = lift2 (<=)
+-- (%=)  = lift2 (==)
+-- (%>=) = lift2 (>=)
+-- (%>)  = lift2 (>)
 
---Option Contracts
-european :: Date -> Contract -> Contract
-european t u = cWhen (at t) (u `cOr` zero)
+-- --Option Contracts
+-- european :: Date -> Contract -> Contract
+-- european t u = cWhen (at t) (u `cOr` zero)
 
-american :: (Date, Date) -> Contract -> Contract
-american (t1, t2) = anytime (between t1 t2)
+-- american :: (Date, Date) -> Contract -> Contract
+-- american (t1, t2) = anytime (between t1 t2)
 
-between :: Date -> Date -> Obs Bool
-between t1 t2 = lift2 (&&) (date %>= konst t1) (date %<= konst t2)
+-- between :: Date -> Date -> Obs Bool
+-- between t1 t2 = lift2 (&&) (date %>= konst t1) (date %<= konst t2)
 
--- american as in comb. paper: american (t1, t2) u 
---                               = get (truncate t1 opt) `then` opt
---								 where
---								    opt :: Contract
---								    opt = anytime (perhaps t2 u)
+-- -- american as in comb. paper: american (t1, t2) u 
+-- --                               = get (truncate t1 opt) `then` opt
+-- --								 where
+-- --								    opt :: Contract
+-- --								    opt = anytime (perhaps t2 u)
 
 
 
