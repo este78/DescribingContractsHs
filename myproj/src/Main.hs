@@ -4,4 +4,4 @@ import Contract
 import Pprint
 
 main :: IO ()
-main = printf "something works" 
+main = print "something works" 
