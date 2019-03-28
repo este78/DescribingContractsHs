@@ -50,7 +50,7 @@ data Contract =
 newtype Obs a = Obs (Date -> a)
 
 instance Show a => Show (Obs a) where
-  show (Obs o) = "(Obs " ++ show o ++ ")"
+  show (Obs o) = "(Obs " ++ Obs o ++ ")"
 
 
 --Primitives for Defining Contracts  
@@ -94,7 +94,7 @@ konst k = Obs (\t -> bigK k)
 
 
 lift :: (a -> b) -> Obs a -> Obs b
-lift f (Obs o) = Obs (f o)
+lift f (Obs o) = Obs (map f o)
 
 lift2 :: (a -> b -> c) -> Obs a -> Obs b -> Obs c
 lift2 f (Obs o1) (Obs o2) = Obs (f (f o1) (f o2))

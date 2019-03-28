@@ -3,8 +3,6 @@ module Pprint (pprint) where
 
 import Contract
 
-
-
 ---- naive pprinter to text representation of contract
 pprint :: Contract -> String
 pprint a = ""
@@ -16,3 +14,7 @@ pprint (Or c1 c2) = "Or(" ++ pprint c1 ++ "," ++ pprint c2 ++ ")"
 pprint (Scale obs c) = "ScaleObs(" ++ pprint c ++ ")"
 pprint (Anytime c) = "Anytime(" ++ pprint c ++ ")"
 
+  
+--pprint (Cond obs c) =  
+--pprint (When obs c) = "When at(" ++
+--print  (Until obs c) = "Until"
