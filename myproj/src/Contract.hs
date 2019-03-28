@@ -47,10 +47,10 @@ data Contract =
   deriving Show
 
 -- --newtype Obs a = Obs (Date -> a)
-newtype Obs a = Obs (Date -> a)
+newtype Obs a = Obs (Date -> Just a)
 
 instance Show a => Show (Obs a) where
-  show (Obs o) = "(Obs " ++ o ++ ")"
+  show (Obs o) = "(Obs " ++ Just o ++ ")"
 
 
 --Primitives for Defining Contracts  
