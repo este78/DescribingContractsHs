@@ -5,7 +5,7 @@ import Contract
 
 ---- naive pprinter to text representation of contract
 pprint :: Contract -> String
-pprint a = ""
+--pprint a = ""
 pprint Zero = "Zero"
 pprint (One k) = "One(" ++ show k ++ ")"
 pprint (Give c) = "Give(" ++ pprint c ++ ")"

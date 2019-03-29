@@ -213,7 +213,7 @@ cOr = Or
                 -- ,(EUR, rates 6.5 0.25)
                 -- ,(GBP, rates 8   0.5)
                 -- ,(KYD, rates 11  1.2)
-				-- ,(USD, rates 5   1)
+                -- ,(USD, rates 5   1)
 				-- ,(ZAR, rates 15  1.5)
                                 -- ]
     
