@@ -2,14 +2,16 @@
 --It may be freely used and copied for educational purposes.
 
 module Contract where
- 
---import List
+
+import Observable 
+
+import List
 import Numeric
-import Control.Monad
+--import Control.Monad
 import Data.Maybe
 --import System
 --import Text.XHtml.Strict
-import Data.Unique
+--import Data.Unique
 
 --Notational conventions from paper
 --c, d, u : Contract
@@ -22,15 +24,15 @@ import Data.Unique
 
 data Currency = USD | GBP | EUR | KYD | ZAR | CHF  deriving (Eq, Show)
 
-type Date = (CalendarTime, TimeStep)
-type TimeStep = Int
-type CalendarTime = ()
+-- type Date = (CalendarTime, TimeStep)
+-- type TimeStep = Int
+-- type CalendarTime = ()
 
-mkDate :: TimeStep -> Date
-mkDate s = ((),s)
+-- mkDate :: TimeStep -> Date
+-- mkDate s = ((),s)
 
-time0 :: Date
-time0 = mkDate 0
+-- time0 :: Date
+-- time0 = mkDate 0
 
 --Representation of a contract
 data Contract =
@@ -46,11 +48,11 @@ data Contract =
   | Until   (Obs Bool)   Contract
   deriving Show
 
--- --newtype Obs a = Obs (Date -> a)
-newtype Obs a = Obs Date 
+-- -- --newtype Obs a = Obs (Date -> a)
+-- newtype Obs a = Obs Date 
 
-instance Show a => Show (Obs a) where
-  show (Obs o) = "(Obs " ++ show o ++ ")"
+-- instance Show a => Show (Obs a) where
+  -- show (Obs o) = "(Obs " ++ show o ++ ")"
 
 
 --Primitives for Defining Contracts  
@@ -72,8 +74,8 @@ cOr = Or
 -- cond :: Obs Bool -> Contract -> Contract -> Contract
 -- cond = Cond
 
--- scale :: Obs Double -> Contract -> Contract
--- scale = Scale
+scale :: Obs Double -> Contract -> Contract
+scale = Scale
 
 -- cWhen :: Obs Bool -> Contract -> Contract
 -- cWhen = When
