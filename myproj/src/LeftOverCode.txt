@@ -1,0 +1,7 @@
+
+
+--From Obsevables, sorting dates? not working
+sortDate :: Ord Date =>[Date] -> [Date]
+sortDate [] = []
+sortDate (Day [x]) = Day $ x : []
+sortDate (Day(x:xs)) =  sort $ Day (x:xs)

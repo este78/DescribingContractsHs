@@ -6,7 +6,7 @@ module Observable where
 
 data Date = Day Int deriving (Show, Eq, Ord)
 
---Returns the day 
+--Returns the day the contract expires
 horizon :: Date -> Int
 horizon (Day a) = a
 
@@ -14,9 +14,12 @@ horizon (Day a) = a
 dayDiff :: Date -> Date -> Int
 dayDiff (Day a) (Day b) = b - a
 
---returns the higher date in days
+--returns the further/nearer date from now ("day 0") in days
 maxDate :: Date -> Date -> Date
 maxDate (Day a)(Day b) = Day $ max a b
+
+minDate :: Date -> Date -> Date
+minDate (Day a)(Day b) = Day $ min a b
 
 --returns number of months
 dayToMonth :: Date -> Int
@@ -26,6 +29,27 @@ dayToMonth (Day a) =
           else (a `div` 30) + 1
 
 
+data Observable = Obs (String, Date, Double)  deriving (Show, Eq, Ord)
+
+--Observation to string
+kindOfObs :: Observable -> String 
+kindOfObs (Obs (a, b, c)) = a ++ " " ++ (show b) ++ " at " ++ (show c)
+
+--return name of observation
+nameObs :: Observable -> String
+nameObs (Obs (a, _, _)) = a
+
+--return date associated to the observation
+dateObs :: Observable -> Date
+dateObs (Obs (_, a, _)) = a
+
+--real-numerical value associated to Obs 
+valObs :: Observable -> Double
+valObs (Obs (_, _, a)) = a
+
+--pass observation
+createObs :: String -> Date -> Double -> Observable
+createObs a b c = Obs (a, b, c)
 
 --Code from rossng/merchant github
 --{-# LANGUAGE TypeOperators, MultiParamTypeClasses, FlexibleInstances, FlexibleContexts, GADTs #-}
