@@ -2,6 +2,13 @@ module Combinators where
 
 newtype Date = Day Int deriving (Show, Eq, Ord)
 
+--Create your own date
+mkDate :: Int -> Date
+mkDate s = Day s
+
+time0 :: Date
+time0 = mkDate 0
+
 --Returns the day the contract expires
 horizon :: Date -> Int
 horizon (Day a) = a

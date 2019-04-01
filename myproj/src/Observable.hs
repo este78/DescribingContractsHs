@@ -1,8 +1,14 @@
 module Observable where
 
 
-
 newtype Date = Day Int deriving (Show, Eq, Ord)
+
+--Create your own date
+mkDate :: Int -> Date
+mkDate s = Day s
+
+time0 :: Date
+time0 = mkDate 0
 
 --Returns the day the contract expires
 horizon :: Date -> Int
@@ -25,7 +31,7 @@ dayToMonth (Day a) =
         if a `mod` 30 == 0
           then a `div` 30 
           else (a `div` 30) + 1
-
+ 
 
 data Observable = Obs (String, Date, Double)  deriving (Show, Eq, Ord)
 
