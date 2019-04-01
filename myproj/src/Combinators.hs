@@ -1,6 +1,6 @@
 module Combinators where
 
-data Date = Day Int deriving (Show, Eq, Ord)
+newtype Date = Day Int deriving (Show, Eq, Ord)
 
 --Returns the day the contract expires
 horizon :: Date -> Int
@@ -17,7 +17,7 @@ maxDate (Day a)(Day b) = Day $ max a b
 minDate :: Date -> Date -> Date
 minDate (Day a)(Day b) = Day $ min a b
 
---returns number of months
+--returns amount of months from Day 0 to time Day x
 dayToMonth :: Date -> Int
 dayToMonth (Day a) = 
         if a `mod` 30 == 0
@@ -25,7 +25,7 @@ dayToMonth (Day a) =
           else (a `div` 30) + 1
 
 
-data Obs = O (String, Date, Double) deriving (Show, Eq, Ord)
+data Obs = O (String, Date, Double)  deriving (Show, Eq, Ord)
 
 --Observation to string
 kindOfObs :: Obs -> String 
@@ -39,7 +39,7 @@ nameObs (O (a, _, _)) = a
 dateObs :: Obs -> Date
 dateObs (O (_, a, _)) = a
 
---real-numerical value associated to Obs 
+--real-numerical value associated to O 
 valObs :: Obs -> Double
 valObs (O (_, _, a)) = a
 
@@ -47,9 +47,7 @@ valObs (O (_, _, a)) = a
 createObs :: String -> Date -> Double -> Obs
 createObs a b c = O (a, b, c)
 
---Check dates
-checkDate :: Obs -> Date -> Bool
-checkDate (O(_,a,_)) b = if (a == b) then True else False
+
 
 --Notational conventions from paper
 --c, d, u : Contract
@@ -108,26 +106,47 @@ anytime = Anytime
 cUntil :: Obs -> Contract -> Contract
 cUntil = Until
 
---Other combinator derived from the primitives above
-andGive :: Contract -> Contract -> Contract
-andGive c d = c `cAnd` give d
+
+-- forward :: Date -> Double -> Currency -> Contract
+-- forward t x k = cWhen (at t) (scale (konst x) (one k))
+
+--mcmahon/git examples of contracts (forward adapted from zcb)
+
+-- --Other combinator derived from the primitives above
+-- andGive :: Contract -> Contract -> Contract
+-- andGive c d = c `cAnd` give d
 
 
-scaleK :: Obs -> Contract -> Contract
-scaleK (O(_,_,a)) c = scale (O(_,_,a)) c                         --This 4 lines scale "one" to the specified observable amount
+-- scaleK :: Obs -> Contract -> Contract
+-- scaleK (O(_,_,a)) c = scale (O(_,_,a)) c                         --This 4 lines scale "one" to the specified observable amount
 
 
-forward :: Obs -> Currency -> Contract                          --Long forward when t is true (==current date), receive (one k) * x
-forward (O(s,b,a)) k = cWhen b (scaleK a (one k))
---Short position
-forward' (O(s,d,a)) x k = give(cWhen d) (scaleK a (one k))	    --give swaps rights/obligations in the contract. 
-                                                                --In this case the seller pays (one k) *x
 
--- ==================================================================================================================================================														
+-- forward :: Obs -> Currency -> Contract                          --Long forward when t is true (==current date), receive (one k) * x
+-- forward (O(s,b,a)) k = cWhen b (scaleK a (one k))
+-- --Short position
+-- forward' (O(s,d,a)) x k = give(cWhen d) (scaleK a (one k))	    --give swaps rights/obligations in the contract. 
+                                                                -- --In this case the seller pays (one k) *x
 
---Single swap, (interest rates) exchange, could be seen as a combination of a long forward and short forward
+-- -- ==================================================================================================================================================														
+
+-- --Single swap, (interest rates) exchange, could be seen as a combination of a long forward and short forward
  
--- swap :: Date -> Contract -> Contract -> Contract
--- swap t c1 c2 = when (at t) forward t x k 'and' give(forward t x k)  --Should we use a class for forwards?
+-- -- swap :: Date -> Contract -> Contract -> Contract
+-- -- swap t c1 c2 = when (at t) forward t x k 'and' give(forward t x k)  --Should we use a class for forwards?
 
+-- c1 :: Contract
+-- c1 = zcb t1 10 USD
 
+-- t1 :: Date
+-- t1 = mkDate t1Horizon
+
+-- t1Horizon :: TimeStep
+-- t1Horizon = 3
+
+-- c11 :: Contract
+-- c11 = european (mkDate 2)
+        -- (zcb (mkDate 20) 0.4 USD `cAnd`
+        -- zcb (mkDate 30) 9.3 USD `cAnd`
+        -- zcb (mkDate 40) 109.3 USD `cAnd`
+        -- give (zcb (mkDate 12) 100 USD))

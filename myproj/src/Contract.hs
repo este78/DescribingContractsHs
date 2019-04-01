@@ -71,39 +71,39 @@ cAnd = And
 cOr :: Contract -> Contract -> Contract
 cOr = Or
 
--- cond :: Obs Bool -> Contract -> Contract -> Contract
--- cond = Cond
+cond :: Obs Bool -> Contract -> Contract -> Contract
+cond = Cond
 
 scale :: Obs Double -> Contract -> Contract
 scale = Scale
 
--- cWhen :: Obs Bool -> Contract -> Contract
--- cWhen = When
+cWhen :: Obs Bool -> Contract -> Contract
+cWhen = When
 
--- anytime :: Obs Bool -> Contract -> Contract
--- anytime = Anytime
+anytime :: Obs Bool -> Contract -> Contract
+anytime = Anytime
 
--- cUntil :: Obs Bool -> Contract -> Contract
--- cUntil = Until
+cUntil :: Obs Bool -> Contract -> Contract
+cUntil = Until
 
--- --Other combinator derived from the primitives above
--- andGive :: Contract -> Contract -> Contract
--- andGive c d = c `cAnd` give d
+--Other combinator derived from the primitives above
+andGive :: Contract -> Contract -> Contract
+andGive c d = c `cAnd` give d
 
--- --Primitives over observables 
--- konst :: a -> Obs a					--konst x is an observable that has value x at any time
--- konst k = Obs (\t -> bigK k)
+--Primitives over observables 
+konst :: a -> Obs a					--konst x is an observable that has value x at any time
+konst k = Obs (\t -> bigK k)
 
 
--- lift :: (a -> b) -> Obs a -> Obs b
--- lift f (Obs o) = Obs (map f o)
+lift :: (a -> b) -> Obs a -> Obs b
+lift f (Obs o) = Obs (map f o)
 
--- lift2 :: (a -> b -> c) -> Obs a -> Obs b -> Obs c
--- lift2 f (Obs o1) (Obs o2) = Obs (f (f o1) (f o2))
+lift2 :: (a -> b -> c) -> Obs a -> Obs b -> Obs c
+lift2 f (Obs o1) (Obs o2) = Obs (f (f o1) (f o2))
 
--- --"The value of the observable date at date t is just t."
--- date :: Obs Date
--- date = Obs (\t -> t)
+--"The value of the observable date at date t is just t."
+date :: Obs Date
+date = Obs (\t -> t)
 
 -- --"All numeric operations lift to the Obs type. The implementation is simple,
 -- --using lift and lift2."

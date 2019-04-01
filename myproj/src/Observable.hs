@@ -1,10 +1,8 @@
--- From rossng/merchant   
-{-# LANGUAGE TypeOperators, MultiParamTypeClasses, FlexibleInstances, FlexibleContexts, GADTs #-}
 module Observable where
 
 
 
-data Date = Day Int deriving (Show, Eq, Ord)
+newtype Date = Day Int deriving (Show, Eq, Ord)
 
 --Returns the day the contract expires
 horizon :: Date -> Int
@@ -21,7 +19,7 @@ maxDate (Day a)(Day b) = Day $ max a b
 minDate :: Date -> Date -> Date
 minDate (Day a)(Day b) = Day $ min a b
 
---returns number of months
+--returns amount of months from Day 0 to time Day x
 dayToMonth :: Date -> Int
 dayToMonth (Day a) = 
         if a `mod` 30 == 0
@@ -51,7 +49,7 @@ valObs (Obs (_, _, a)) = a
 createObs :: String -> Date -> Double -> Observable
 createObs a b c = Obs (a, b, c)
 
---Code from rossng/merchant github
+--Code from rossng/merchant github  
 --{-# LANGUAGE TypeOperators, MultiParamTypeClasses, FlexibleInstances, FlexibleContexts, GADTs #-}
 -- data Obs a where
   -- External :: String -> Obs a
