@@ -111,3 +111,23 @@ cUntil = Until
 --Other combinator derived from the primitives above
 andGive :: Contract -> Contract -> Contract
 andGive c d = c `cAnd` give d
+
+
+scaleK :: Obs -> Contract -> Contract
+scaleK (O(_,_,a)) c = scale (O(_,_,a)) c                         --This 4 lines scale "one" to the specified observable amount
+
+
+forward :: Obs -> Currency -> Contract                          --Long forward when t is true (==current date), receive (one k) * x
+forward (O(s,b,a)) k = cWhen b (scaleK a (one k))
+--Short position
+forward' (O(s,d,a)) x k = give(cWhen d) (scaleK a (one k))	    --give swaps rights/obligations in the contract. 
+                                                                --In this case the seller pays (one k) *x
+
+-- ==================================================================================================================================================														
+
+--Single swap, (interest rates) exchange, could be seen as a combination of a long forward and short forward
+ 
+-- swap :: Date -> Contract -> Contract -> Contract
+-- swap t c1 c2 = when (at t) forward t x k 'and' give(forward t x k)  --Should we use a class for forwards?
+
+
