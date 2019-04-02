@@ -1,6 +1,13 @@
+{-
+
+Suggestions below - just load into ghci and fix error messages
+
+Next meeting: 12noon Thu 4th April
+-}
+
 module Combinators where
 
-newtype Date = Day Int deriving (Show, Eq, Ord)
+newtype Date = Day Int deriving (Show, Read, Eq, Ord)
 
 --Create your own date
 mkDate :: Int -> Date
@@ -26,32 +33,32 @@ minDate (Day a)(Day b) = Day $ min a b
 
 --returns amount of months from Day 0 to time Day x
 dayToMonth :: Date -> Int
-dayToMonth (Day a) = 
+dayToMonth (Day a) =
         if a `mod` 30 == 0
-          then a `div` 30 
+          then a `div` 30
           else (a `div` 30) + 1
 
 
-data Obs = O (String, Date, Double)  deriving (Show, Eq, Ord)
+data Obs a = O (String, Date, a)  deriving (Show, Read, Eq, Ord)
 
 --Observation to string
-kindOfObs :: Obs -> String 
+kindOfObs :: Show a => Obs a -> String
 kindOfObs (O (a, b, c)) = a ++ " " ++ (show b) ++ " at " ++ (show c)
 
 --return name of observation
-nameObs :: Obs -> String
+nameObs :: Obs a-> String
 nameObs (O (a, _, _)) = a
 
 --return date associated to the observation
-dateObs :: Obs -> Date
+dateObs :: Obs a -> Date
 dateObs (O (_, a, _)) = a
 
---real-numerical value associated to O 
-valObs :: Obs -> Double
+--real-numerical value associated to O
+valObs :: Obs a -> a
 valObs (O (_, _, a)) = a
 
 --pass observation
-createObs :: String -> Date -> Double -> Obs
+createObs :: String -> Date -> a -> Obs a
 createObs a b c = O (a, b, c)
 
 
@@ -65,7 +72,7 @@ createObs a b c = O (a, b, c)
 --      p : Value process
 --      v : Random variable
 
-data Currency = USD | GBP | EUR | KYD | ZAR | CHF  deriving (Eq, Show)
+data Currency = USD | GBP | EUR | KYD | ZAR | CHF  deriving (Eq, Show, Read)
 
 --Representation of a contract
 data Contract =
@@ -74,15 +81,15 @@ data Contract =
   | Give Contract
   | And  Contract Contract
   | Or   Contract Contract
-  | Cond    Obs Contract Contract   --Obs Bool
-  | Scale   Obs Contract
-  | When    Obs Contract            --Obs Bool
-  | Anytime Obs Contract            --Obs Bool
-  | Until   Obs Contract            --Obs Bool
-  deriving Show
+  | Cond    (Obs Bool) Contract Contract   --Obs Bool
+  | Scale   (Obs Double) Contract            --Obs a where Num a or Obs Double
+  | When    (Obs Bool) Contract            --Obs Bool
+  | Anytime (Obs Bool) Contract            --Obs Bool
+  | Until   (Obs Bool) Contract            --Obs Bool
+  deriving (Show, Read)
 
 
---Primitives for Defining Contracts  
+--Primitives for Defining Contracts
 zero :: Contract
 zero = Zero                                  -- A contract with no rights nor obligations
 
@@ -98,19 +105,19 @@ cAnd = And
 cOr :: Contract -> Contract -> Contract
 cOr = Or
 
-scale :: Obs -> Contract -> Contract
+scale :: Obs Double  -> Contract -> Contract
 scale = Scale
 
-cond :: Obs -> Contract -> Contract -> Contract
+cond :: Obs Bool -> Contract -> Contract -> Contract
 cond = Cond
 
-cWhen :: Obs -> Contract -> Contract
+cWhen :: Obs Bool-> Contract -> Contract
 cWhen = When
 
-anytime :: Obs -> Contract -> Contract
+anytime :: Obs Bool-> Contract -> Contract
 anytime = Anytime
 
-cUntil :: Obs -> Contract -> Contract
+cUntil :: Obs Bool-> Contract -> Contract
 cUntil = Until
 
 
@@ -132,13 +139,13 @@ cUntil = Until
 -- forward :: Obs -> Currency -> Contract                          --Long forward when t is true (==current date), receive (one k) * x
 -- forward (O(s,b,a)) k = cWhen b (scaleK a (one k))
 -- --Short position
--- forward' (O(s,d,a)) x k = give(cWhen d) (scaleK a (one k))	    --give swaps rights/obligations in the contract. 
+-- forward' (O(s,d,a)) x k = give(cWhen d) (scaleK a (one k))	    --give swaps rights/obligations in the contract.
                                                                 -- --In this case the seller pays (one k) *x
 
--- -- ==================================================================================================================================================														
+-- -- ==================================================================================================================================================
 
 -- --Single swap, (interest rates) exchange, could be seen as a combination of a long forward and short forward
- 
+
 -- -- swap :: Date -> Contract -> Contract -> Contract
 -- -- swap t c1 c2 = when (at t) forward t x k 'and' give(forward t x k)  --Should we use a class for forwards?
 
