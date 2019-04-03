@@ -1,0 +1,12 @@
+module StringToDate where
+
+datatype Date = Calendar a | Day Integer deriving (Show, Eq, Ord, Read)
+
+getDate :: Cldr a -> Day Integer
+getDate (Cldr(y,m,d)) = let month = processMonth (Cldr(y,m,d))
+                       |let year = processYear (Cldr(y,m,d))
+                       |365*year + year `div` 4 - year `div` 100 + year `div` 400 + ((month*306 + 5) `div` 10) + (d -1)  
+
+processMonth :: Cldr a -> Integer
+processMonth (Cldr(_,m,_)) = (m+9)%12
+processYear (Cldr(y,m,d)) = y - ((processMonth(Cldr(y,m,d))) `div` 10)

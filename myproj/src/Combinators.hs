@@ -4,6 +4,7 @@ Suggestions below - just load into ghci and fix error messages
 
 Next meeting: 12noon Thu 4th April
 -}
+{-# LANGUAGE NoMonomorphismRestriction #-}
 
 module Combinators where
 
@@ -39,7 +40,7 @@ dayToMonth (Day a) =
           else (a `div` 30) + 1
 
 
-data Obs a = O (String, Date, a)  deriving (Show, Read, Eq, Ord)
+data Obs a = O (String, Date, Double) |O' Bool deriving (Show, Read, Eq, Ord)
 
 --Observation to string
 kindOfObs :: Show a => Obs a -> String
@@ -54,11 +55,11 @@ dateObs :: Obs a -> Date
 dateObs (O (_, a, _)) = a
 
 --real-numerical value associated to O
-valObs :: Obs a -> a
-valObs (O (_, _, a)) = a
+valObs :: Obs a -> Double
+valObs (O(_, _, a)) = a
 
 --pass observation
-createObs :: String -> Date -> a -> Obs a
+createObs :: String -> Date -> Double -> Obs a
 createObs a b c = O (a, b, c)
 
 
@@ -121,8 +122,16 @@ cUntil :: Obs Bool-> Contract -> Contract
 cUntil = Until
 
 
--- forward :: Date -> Double -> Currency -> Contract
--- forward t x k = cWhen (at t) (scale (konst x) (one k))
+forward :: Obs a -> Currency -> Contract
+forward (O(s,t,x)) k =  cWhen (at t) (scale (konst (O(s,t,x))(valObs(O(s,t,x)))) (one k))      
+
+konst :: Obs a -> Double -> Obs Double
+konst (O(s,t,_)) x = (O(s,t,x))
+
+at :: Date -> Obs Bool
+at t 
+           |(mkDate 100) == t = O' True 
+           |otherwise = O' False
 
 --mcmahon/git examples of contracts (forward adapted from zcb)
 
@@ -160,7 +169,7 @@ cUntil = Until
 
 -- c11 :: Contract
 -- c11 = european (mkDate 2)
-        -- (zcb (mkDate 20) 0.4 USD `cAnd`
-        -- zcb (mkDate 30) 9.3 USD `cAnd`
-        -- zcb (mkDate 40) 109.3 USD `cAnd`
-        -- give (zcb (mkDate 12) 100 USD))
+        -- (forward (mkDate 20) 0.4 USD `cAnd`
+        -- forward (mkDate 30) 9.3 USD `cAnd`
+        -- forward (mkDate 40) 109.3 USD `cAnd`
+        -- give (forward (mkDate 12) 100 USD))

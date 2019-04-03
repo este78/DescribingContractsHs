@@ -27,33 +27,34 @@ minDate (Day a)(Day b) = Day $ min a b
 
 --returns amount of months from Day 0 to time Day x
 dayToMonth :: Date -> Int
-dayToMonth (Day a) = 
+dayToMonth (Day a) =
         if a `mod` 30 == 0
-          then a `div` 30 
+          then a `div` 30
           else (a `div` 30) + 1
- 
 
-data Observable = Obs (String, Date, Double)  deriving (Show, Eq, Ord)
+
+data Obs a = O (String, Date, Double) |O' Bool | O'' Double deriving (Show, Read, Eq, Ord)
 
 --Observation to string
-kindOfObs :: Observable -> String 
-kindOfObs (Obs (a, b, c)) = a ++ " " ++ (show b) ++ " at " ++ (show c)
+kindOfObs :: Show a => Obs a -> String
+kindOfObs (O (a, b, c)) = a ++ " " ++ (show b) ++ " at " ++ (show c)
 
 --return name of observation
-nameObs :: Observable -> String
-nameObs (Obs (a, _, _)) = a
+nameObs :: Obs a-> String
+nameObs (O (a, _, _)) = a
 
 --return date associated to the observation
-dateObs :: Observable -> Date
-dateObs (Obs (_, a, _)) = a
+dateObs :: Obs a -> Date
+dateObs (O (_, a, _)) = a
 
---real-numerical value associated to Obs 
-valObs :: Observable -> Double
-valObs (Obs (_, _, a)) = a
+--real-numerical value associated to O
+valObs :: Obs a -> Double
+valObs (O (_, _, a)) = a
 
 --pass observation
-createObs :: String -> Date -> Double -> Observable
-createObs a b c = Obs (a, b, c)
+createObs :: String -> Date -> Double -> Obs a
+createObs a b c = O (a, b, c)
+
 
 --Code from rossng/merchant github  
 --{-# LANGUAGE TypeOperators, MultiParamTypeClasses, FlexibleInstances, FlexibleContexts, GADTs #-}
