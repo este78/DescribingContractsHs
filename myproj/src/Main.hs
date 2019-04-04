@@ -1,7 +1,8 @@
 module Main where
 
-import Contract
+import Combinators
 import Pprint
 
 main :: IO ()
-main = putStrLn "something works" 
+main = do
+       putStrLn "something works" 

@@ -109,6 +109,7 @@ cOr = Or
 scale :: Obs Double  -> Contract -> Contract
 scale = Scale
 
+
 cond :: Obs Bool -> Contract -> Contract -> Contract
 cond = Cond
 
@@ -122,8 +123,7 @@ cUntil :: Obs Bool-> Contract -> Contract
 cUntil = Until
 
 
-forward :: Obs a -> Currency -> Contract
-forward (O(s,t,x)) k =  cWhen (at t) (scale (konst (O(s,t,x))(valObs(O(s,t,x)))) (one k))      
+     
 
 konst :: Obs a -> Double -> Obs Double
 konst (O(s,t,_)) x = (O(s,t,x))
@@ -133,25 +133,25 @@ at t
            |(mkDate 100) == t = O' True 
            |otherwise = O' False
 
+--Forward Contract Defintion
+forward :: Obs a -> Currency -> Contract
+forward (O(s,t,x)) k =  cWhen (at t) (scale (konst (O(s,t,x))(valObs(O(s,t,x)))) (one k)) 
+ 
+--Printing 
+printForward :: (a->b->c) -> Obs a -> Currency-> String
+printForward forward (O(s,t,x)) k = let b = (at t) in case b of (O' True) -> "Exercised " ++ s ++ " " ++ (show x) ++ " " ++ (show k) 
+                                                                (O' False) -> "Expecting to exercise " ++ s ++ " " ++ (show x) ++ " " ++ (show k) ++ " in " ++(show t)
+                                                            
+
+--Printing
+--case (cWhen (at t)) of (O' True) -> ("Exercised" ++ " " ++ (show x) ++ " " ++ (show k))
+                      -- (O' False) ->  ("Expecting on" ++ (show t) ++ " " ++ printKonst(konst (O(s,t,x))(valObs(O(s,t,x)))) ++ " " ++ (show k))
+
 --mcmahon/git examples of contracts (forward adapted from zcb)
 
 -- --Other combinator derived from the primitives above
 -- andGive :: Contract -> Contract -> Contract
 -- andGive c d = c `cAnd` give d
-
-
--- scaleK :: Obs -> Contract -> Contract
--- scaleK (O(_,_,a)) c = scale (O(_,_,a)) c                         --This 4 lines scale "one" to the specified observable amount
-
-
-
--- forward :: Obs -> Currency -> Contract                          --Long forward when t is true (==current date), receive (one k) * x
--- forward (O(s,b,a)) k = cWhen b (scaleK a (one k))
--- --Short position
--- forward' (O(s,d,a)) x k = give(cWhen d) (scaleK a (one k))	    --give swaps rights/obligations in the contract.
-                                                                -- --In this case the seller pays (one k) *x
-
--- -- ==================================================================================================================================================
 
 -- --Single swap, (interest rates) exchange, could be seen as a combination of a long forward and short forward
 
