@@ -158,7 +158,7 @@ printForward (O(s,t,x)) k = let b = (at t)
           -> "Expecting to exercise " ++ s ++ " " ++ (show x) ++ " " ++ (show k) ++ " in " ++(show t)
  
 
-printContract c = if (zero) then "No Rights, no Obligations" else "peanuts"
+printContract c = show c
                  
 
 ----------------------------------------------------------
