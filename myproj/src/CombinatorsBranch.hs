@@ -4,53 +4,31 @@
 -}
 
 
-module Combinators where
+module CombinatorsB where
 
-import StringToDate 
-
---newtype Date = Day Int deriving (Show, Read, Eq, Ord)
+import StringToDate
+import System.IO
 
 --Create your own date
-mkDate ::  Date
-mkDate = (C(2019,4,6))
+-- mkDate :: Int -> Date 
+-- mkDate s = Day s
 
-time0 :: Date
-time0 = C(0,0,0)
-
---Returns the day the contract expires
-horizon :: Date -> Int
-horizon (C(a,b,c)) =  getDay (C(a,b,c))
-
---Returns the difference between two dates in Int
-dayDiff :: Date -> Date -> Int
-dayDiff (C(a,b,c)) (C(x,y,z)) = getDay(C(a,b,c)) - getDay(C(x,y,z))
-
---returns the further/nearer date from now ("day 0") in days
-maxDate :: Date -> Date -> Date
-maxDate (C(a,b,c))(C(x,y,z)) = max (C(a,b,c)) (C(x,y,z))
-
-minDate :: Date -> Date -> Date
-minDate (C(a,b,c))(C(x,y,z)) = min (C(a,b,c)) (C(x,y,z))
-
---Operations adding/subtracting days to a Date
-incrementDate :: Date -> Int -> Date
-incrementDate (C(a,b,c)) x = toDate(getDay(C(a,b,c)) + x)
 
 
 data Obs a = O (String, Date, a)
-  deriving (Show, Read)
+  deriving (Show, Read, Eq, Ord)
 
 --Observation to string
-kindOfObs :: Show a => Obs a -> String
-kindOfObs (O (a, b, c)) = a ++ " " ++ (show b) ++ " at " ++ (show c)
+printObsA :: Show a => Obs a -> String
+printObsA (O (a, b, c)) = a ++ " " ++ (show b) ++ " at " ++ (show c)
 
 --return name of observation
-nameObs :: Obs a-> String
-nameObs (O (a, _, _)) = a
+valName :: Obs a-> String
+valName (O (a, _, _)) = a
 
 --return date associated to the observation
-dateObs :: Obs a -> Date
-dateObs (O (_, a, _)) = a
+valDate :: Obs a -> Date 
+valDate (O (_, a, _)) = a
 
 --real-numerical value associated to O
 valObs :: Obs a -> a
@@ -122,47 +100,26 @@ cUntil = Until
 
      
 
-konst :: Obs a -> b -> Obs b
+konst :: Obs a -> Double -> Obs Double
 konst (O(s,t,_)) x = (O(s,t,x))
 
-at :: Date -> Obs Bool
-at t 
-           |mkDate  == t = O ("?",(C(0,0,0)),True) 
-           |otherwise = O ("?",(C(0,0,0)),False)
+--at :: Date -> IO Date -> Obs Bool
+at t = do 
+     a <- (dateIO t)
+     return (O ("?",t,a)) 
+         
 
 --Forward Contract Defintion
---forward :: Obs a -> Currency -> Contract
+forward :: Obs a -> Currency -> Contract
 forward (O(s,t,x)) k =  cWhen (at t) (scale (konst (O(s,t,x))(valObs(O(s,t,x)))) (one k)) 
  
-swap ::  Contract -> Contract -> Contract
-swap c1 c2 =   c1 `cAnd` (give c2)
-
-european :: Date -> Contract -> Contract
-european t u = cWhen (at t) (u `cOr` zero)
-
-american :: (Date, Date) -> Contract -> Contract
-american (t1, t2) u = anytime (between t1 t2) u
-
-between :: Date -> Date -> Obs Bool
-between t1 t2 = konst (O("?", mkDate, 0))(mkDate >= t1 && mkDate <= t2)
-
-
- 
 --Printing 
-printForward :: (Show a1, Show a2)=> Obs a1 -> a2 -> String
-printForward (O(s,t,x)) k = let b = (at t) 
-    in case b of 
-        (O(_, _, True))
-          -> "Exercised " ++ s ++ " " ++ (show x) ++ " " ++ (show k) 
-        (O(_, _, False)) 
-          -> "Expecting to exercise " ++ s ++ " " ++ (show x) ++ " " ++ (show k) ++ " in " ++(show t)
- 
-
-printContract c = if (zero) then "No Rights, no Obligations" else "peanuts"
-                 
-
-----------------------------------------------------------
-
+--printForward :: (Show a1, Show a2)=> Obs a1 -> a2 -> String
+printForward (O(s,t,x)) k = do
+      b <- (at t) 
+      return  ("Contract Exercised?: " ++(show (valObs b) ++ " " ++ show (valDate b)) ++ ", " ++ s ++ " " ++ (show x) ++ " " ++ (show k)) 
+        
+                                                            
 
 --Printing
 --case (cWhen (at t)) of (O' True) -> ("Exercised" ++ " " ++ (show x) ++ " " ++ (show k))
@@ -176,6 +133,8 @@ printContract c = if (zero) then "No Rights, no Obligations" else "peanuts"
 
 -- --Single swap, (interest rates) exchange, could be seen as a combination of a long forward and short forward
 
+-- -- swap :: Date -> Contract -> Contract -> Contract
+-- -- swap t c1 c2 = when (at t) forward t x k 'and' give(forward t x k)  --Should we use a class for forwards?
 
 -- c1 :: Contract
 -- c1 = zcb t1 10 USD

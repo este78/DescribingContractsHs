@@ -1,41 +1,75 @@
 module StringToDate where
 
+import Data.Time.Clock
+import Data.Time.Calendar
 
-data Date a = Cldr (Int,Int,Int) | Day Int deriving (Show, Eq, Ord, Read)
+date :: IO (Integer,Int,Int) -- :: (year,month,day)
+date = getCurrentTime >>= return . toGregorian . utctDay
 
+
+data Date = C (Integer,Int,Int) deriving (Show, Eq, Ord, Read)   -- | Day Int
+
+--IO attempt
+ --comparing dates, Use of IO
+-- atDate (C(a,b,c)) (C(x,y,z))
+     -- |(a,b,c) == (x,y,z) = True 
+     -- | otherwise = False
+
+-- atDateMixedIO (C(a,b,c)) (x,y,z)
+     -- |(a,b,c) <= (x,y,z) = True 
+     -- | otherwise = False
+
+-- atDateIO (a,b,c)(x,y,z)
+     -- |(a,b,c) == (x,y,z) = True 
+     -- | otherwise = False
+
+
+-- dateIO :: Date -> IO Bool
+-- dateIO a = do
+  -- (x,y,z) <- date
+  -- return (atDateMixedIO a (x,y,z))
+  
+
+
+
+
+  
 --Converts a Calendar date in the form year,month,day into a integer
-getDay :: (Show a)=>Date a-> Date Int
-getDay (Cldr(y,m,d)) = let m' = processMonth (Cldr(y,m,d)) ;y' = processYear (Cldr(y,m,d)) 
-                       in Day(processDay y' m' d)  
+getDay :: Date -> Int
+getDay (C(y,m,d)) = let m' = processMonth (C(y,m,d)) ;y' = processYear (C(y,m,d)) 
+                       in (processDay y' m' d)  
 
-processMonth :: Date a -> Int
-processMonth (Cldr(_,m,_)) = ((m+9)`mod` 12)
-processYear (Cldr(y,m,d)) = y - ((processMonth(Cldr(y,m,d))) `div` 10)
+processMonth :: Date -> Int
+processMonth (C(_,m,_)) = ((m+9)`mod` 12)
+processYear :: Date -> Integer
+processYear (C(y,m,d)) = y - ((toInteger(processMonth(C(y,m,d)))) `div` 10)
 
-processDay :: Int -> Int -> Int -> Int
-processDay y m d = 365*y + y `div` 4 - y `div` 100 + y `div` 400 + ((m*306 + 5) `div` 10) + (d -1)
+processDay :: Integer -> Int -> Int -> Int
+processDay y m d = let y' = fromInteger y 
+       in 365*y' + y' `div` 4 - y' `div` 100 + y' `div` 400 + ((m*306 + 5) `div` 10) + (d -1)
 
---difference Days
-diffDays :: Date Int -> Date Int -> Int
-diffDays (Day a)(Day b) = a - b
 
 --gets a date from a day number
-convertToDate :: (Show a)=>Date Int -> Date a
-convertToDate (Day g) = let y = convertToYear (Day g) ; d = convertToDays (Day g) y ; m = convertToMonth d ;  
-                        in Cldr(dYear y m, dMonth m, dDay d m)
+toDate :: Int -> Date 
+toDate g = let y = convertToYear g ; d = convertToDays g y ; m = convertToMonth d ;  
+                        in C(dYear y m, dMonth m, dDay d m)
                       
 
-convertToYear :: Date Int -> Int
-convertToYear (Day g) = (10000*g + 14780) `div` 3652425
+--Day to Date Inner Workings
+--Intermediate Step to calculate the date
+convertToYear :: Int -> Integer
+convertToYear g = toInteger((10000*g + 14780) `div` 3652425)
 
-convertToDays :: Date Int -> Int -> Int
-convertToDays (Day g) y = g - (365*y + y `div` 4 - y `div` 100 + y `div` 400)
+convertToDays :: Int -> Integer -> Int
+convertToDays g y = let y' = fromInteger y in  g - (365*y' + y' `div` 4 - y' `div` 100 + y' `div` 400)
 
 convertToMonth :: Int -> Int
 convertToMonth d = (100*d + 52) `div` 3060
 
-dYear :: Int -> Int -> Int
-dYear y m =  y + ((m + 2) `div` 12)
+--Final Step to Calculate de Date
+dYear :: Integer -> Int -> Integer
+dYear y m = let m' = toInteger ((m + 2) `div` 12) in y + m'
+
 dDay d m = d - ((m*306 + 5) `div` 10) + 1 
 
 dMonth :: Int -> Int
