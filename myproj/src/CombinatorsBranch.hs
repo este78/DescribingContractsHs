@@ -113,19 +113,27 @@ at t = do
 forward :: Obs a -> Currency -> Contract
 forward (O(s,t,x)) k =  cWhen (at t) (scale (konst (O(s,t,x))(valObs(O(s,t,x)))) (one k)) 
  
+
 --Printing 
---printForward :: (Show a1, Show a2)=> Obs a1 -> a2 -> String
-printForward (O(s,t,x)) k = do
-      b <- (at t) 
-      return  ("Contract Exercised?: " ++(show (valObs b) ++ " " ++ show (valDate b)) ++ ", " ++ s ++ " " ++ (show x) ++ " " ++ (show k)) 
-        
-                                                            
+------------------------------------------------------------------------------------------------------------------------------------------------------------
+represent :: Contract -> String
 
---Printing
---case (cWhen (at t)) of (O' True) -> ("Exercised" ++ " " ++ (show x) ++ " " ++ (show k))
-                      -- (O' False) ->  ("Expecting on" ++ (show t) ++ " " ++ printKonst(konst (O(s,t,x))(valObs(O(s,t,x)))) ++ " " ++ (show k))
-
---mcmahon/git examples of contracts (forward adapted from zcb)
+represent c = case c of
+    Zero -> "Contract no obligations, no rights."
+    One k->  show k
+    Give u -> "PAY " ++ represent u
+    And u1 u2-> represent u1 ++ " AND " ++ represent u2
+    Or u1 u2 -> "OPTION \n" ++ represent u1 ++ "OR " ++ "OPTION \n" ++ represent u2
+    Cond (O(_,_,o3)) u1 u2 -> "Carry on"
+    Scale (O(o1,o2,o3)) u -> show o1 ++ " nominal " ++ represent u ++ " " ++ show o3 ++ " on the " ++ date2String o2 ++ "\n"
+    When (O(_,_,o3)) u1-> "Contract \n" ++ represent u1
+    Anytime (O(_,_,o3)) u -> "Savage"
+    Until (O(_,o2,o3)) u -> "this may work"
+    _ -> "something is not right"  
+	
+	
+	
+	
 
 -- --Other combinator derived from the primitives above
 -- andGive :: Contract -> Contract -> Contract
