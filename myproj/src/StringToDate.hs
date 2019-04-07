@@ -9,6 +9,40 @@ date = getCurrentTime >>= return . toGregorian . utctDay
 
 data Date = C (Integer,Int,Int) deriving (Show, Eq, Ord, Read)   -- | Day Int
 
+--Create your own date
+mkDate ::  Date
+mkDate = (C(2019,4,6))
+
+time0 :: Date
+time0 = C(0,0,0)
+
+--Returns the day the contract expires
+horizon :: Date -> Int
+horizon (C(t1,t2,t3)) =  getDay (C(t1,t2,t3))
+
+--Returns the difference between two dates in Int
+dayDiff :: Date -> Date -> Int
+dayDiff (C(t1,t2,t3)) (C(s1,s2,s3)) = getDay(C(t1,t2,t3)) - getDay(C(s1,s2,s3))
+
+--returns the further/nearer date from now ("day 0") in days
+maxDate :: Date -> Date -> Date
+maxDate (C(t1,t2,t3))(C(s1,s2,s3)) = max (C(t1,t2,t3)) (C(s1,s2,s3))
+
+minDate :: Date -> Date -> Date
+minDate (C(t1,t2,t3))(C(s1,s2,s3)) = min (C(t1,t2,t3)) (C(s1,s2,s3))
+
+--Operations adding/subtracting days to a Date
+incrementDate :: Date -> Int -> Date
+incrementDate (C(t1,t2,t3)) x = toDate(getDay(C(t1,t2,t3)) + x)
+
+date2String :: Date -> String
+date2String (C(t1,t2,t3))= show t1 ++ "/" ++ show t2 ++ "/" ++ show t3  
+
+
+
+
+
+
 --IO attempt
  --comparing dates, Use of IO
 -- atDate (C(a,b,c)) (C(x,y,z))
@@ -34,7 +68,11 @@ data Date = C (Integer,Int,Int) deriving (Show, Eq, Ord, Read)   -- | Day Int
 
 
   
+  
+  
+  
 --Converts a Calendar date in the form year,month,day into a integer
+--------------------------------------------------------------------------------------------------------
 getDay :: Date -> Int
 getDay (C(y,m,d)) = let m' = processMonth (C(y,m,d)) ;y' = processYear (C(y,m,d)) 
                        in (processDay y' m' d)  
