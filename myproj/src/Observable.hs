@@ -3,7 +3,7 @@ module Observable where
 
 import StringToDate
 
-data Obs a = O (String, Date, a)
+data Obs a = O (String, Date, a) | O1 Bool
   deriving (Show, Read)
 
 --Observation to string
@@ -25,7 +25,7 @@ valObs (O(_, _, o3)) = o3
 --pass observation
 createObs :: String -> Date -> Double -> Obs Double
 createObs o1 o2 o3 = O (o1, o2, o3)
-
+--
 
 
 

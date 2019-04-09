@@ -1,0 +1,16 @@
+[
+When (O("myContract",C(2019,04,05),False))(Scale (O("myContract",C(2019,04,05),32000))(One  EUR))
+,Anytime (O("American", C(2019,10,10),True)) (Or (Scale (O("American",C(2019,10,10),64000))(One  USD)) Zero)
+,When (O("European Option",C(2019,04,05),True))(Or (And (Scale (O("Apple",C(2019,10,10),128000))(One  CHF))
+                                                        (Scale (O("Intel",C(2019,10,10),128000))(One  CHF))) 
+												Zero)
+,And(When (O("Interest Swap",C(2020,02,12),True))(Scale (O("Agreed",C(2020,08,12),1000000))(One CHF)))	
+           (And
+			   (When (O("Microsoft",C(2020,08,12),False))(Scale (O("Fixed",C(2020,08,12),0.025))(One  Rate)))
+               (Give(When (O("to Intel",C(2020,08,12),False))(Scale (O("Libor",C(2020,08,12),0.02))(One  Rate)))))											
+]
+
+
+
+
+
