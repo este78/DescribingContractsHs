@@ -28,7 +28,7 @@ createObs o1 o2 = O (o1, o2)
 --
 --Opertting with Obs
 lift2 :: (a -> b -> c) -> Obs a -> Obs b -> Obs c
-lift2 (+) o1 o2 = O(" " ,(valObs o1) + (valObs o2))
+lift2 (+) o1 o2 = O(nameObs o2 ,(valObs o1) + (valObs o2))
 --lift2 (-) o1 o2 = O("SumOfObs" ,(valObs o1) - (valObs o2))
 --lift2 (*) o1 o2 = O("SumOfObs" ,(valObs o1) * (valObs o2))
 
@@ -224,7 +224,7 @@ swap ::  Contract -> Contract -> Contract
 swap c1 c2 =   c1 `cAnd` (give c2)
 
 --european :: Obs Date -> Contract -> Contract
-european o c = cWhen  o (c `cOr` zero)
+european t c = cWhen  t (c `cOr` zero)
 
 --american :: Date -> Date -> Contract -> Contract
 american t1 t2 c = anytime t1 t2 (c `cOr` zero)
@@ -241,11 +241,11 @@ represent c = case c of
     Give u -> " PAY " ++ represent u
     And u1 u2-> represent u1 ++ " AND " ++ represent u2
     Or u1 u2 -> " OPTION " ++ represent u1 ++ " OR " ++ "OPTION " ++ represent u2
-    Cond (O(_,o2)) u1 u2 -> "Carry on"
-    Scale (O(o1,o2)) u -> represent u ++ o1 ++ " " ++ show o2 ++ " "
-    When t u1-> "On the " ++ date2String t ++ " "  ++ represent u1 ++ " "
-    Anytime t1 t2 u -> "To be exercised between " ++ show t1 ++ " and " ++ show t2 ++ " "++ represent u
-    Until t u -> "Valid until " ++ show t
+    Cond (O(o1,o2)) u1 u2 -> "If "++ o1 ++ " " ++ show o2 ++ " " ++ represent u1 ++ "OTHERWISE" ++ represent u2
+    Scale (O(o1,o2)) u -> o1 ++ represent u ++ " " ++ show o2 ++ " "
+    When t u1-> date2String t ++ " "  ++ represent u1 ++ " "
+    Anytime t1 t2 u -> "To be exercised between " ++ date2String t1 ++ " and " ++ date2String t2 ++ " "++ represent u
+    Until t u -> "Until " ++ date2String t ++ " " ++ represent u 
     
 
 
