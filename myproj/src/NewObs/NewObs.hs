@@ -9,7 +9,6 @@ module NewObs where
 data Obs a = O (String, a)
   deriving (Show, Read)
 
-
 --Observation to string
 kindOfObs :: Show a => Obs a -> String
 kindOfObs (O (o1, o2)) = o1 ++ " " ++ (show o2) 
@@ -22,23 +21,17 @@ nameObs (O (o1, _)) = o1
 valObs :: Obs a -> a
 valObs (O(_, o2)) = o2
 
---pass observation
+--create observation
 createObs :: String -> a -> Obs a
 createObs o1 o2 = O (o1, o2)
 --
 --Opertting with Obs
 lift2 :: (a -> b -> c) -> Obs a -> Obs b -> Obs c
 lift2 (+) o1 o2 = O(nameObs o2 ,(valObs o1) + (valObs o2))
---lift2 (-) o1 o2 = O("SumOfObs" ,(valObs o1) - (valObs o2))
---lift2 (*) o1 o2 = O("SumOfObs" ,(valObs o1) * (valObs o2))
-
 
 
 -- ===================================================================================================================================================================
 --  DATE  
--- 4. add Days datatype
--- 5. Implement add :: Date -> Days -> Date
--- 6. Implement diff :: Date -> Date -> Days
 -- ===================================================================================================================================================================	  
 
 
@@ -64,16 +57,11 @@ dayToInteger :: Day  -> Integer
 dayToInteger (Day x) = x
 
 --Create your own date
-
 mkDate ::  Date
-mkDate = (C(2019,4,6))
+mkDate = (C(2019,4,26))
 
 time0 :: Date
 time0 = C(0,0,0)
-
---Returns the day the contract expires
-horizon :: Date -> Day
-horizon (C(t1,t2,t3)) = getDay (C(t1,t2,t3))
 
 --Returns the difference between two dates in num of Days
 --dateDiff :: Date -> Date -> Day
@@ -86,20 +74,12 @@ incrementDate (C(t1,t2,t3)) x = toDate(getDay(C(t1,t2,t3)) + x)
 --Subtract, although it could be done 
 decrementDate (C(t1,t2,t3)) x = toDate(getDay(C(t1,t2,t3)) - x)
 
---returns the further/nearer date from now ("day 0") in days
-maxDate :: Date -> Date -> Date
-maxDate (C(t1,t2,t3))(C(s1,s2,s3)) = max (C(t1,t2,t3)) (C(s1,s2,s3))
-
-
-minDate :: Date -> Date -> Date
-minDate (C(t1,t2,t3))(C(s1,s2,s3)) = min (C(t1,t2,t3)) (C(s1,s2,s3))
-
-
+--Convert Date into a String with format Year/Month/Day
 date2String :: Date -> String
 date2String (C(t1,t2,t3))= show t1 ++ "/" ++ show t2 ++ "/" ++ show t3  
 
 --Converts a Calendar date in the form year,month,day into a integer
---------------------------------------------------------------------------------------------------------
+
 getDay :: Date -> Day
 getDay (C(y,m,d)) = let m' = processMonth (C(y,m,d)) ;y' = processYear (C(y,m,d)) 
                        in  (Day (processDay y' m' d))
@@ -155,6 +135,7 @@ dMonth m = fromInteger(((m + 2) `mod` 12) + 1)
 --      p : Value process
 --      v : Random variable
 
+
 data Currency = USD | GBP | EUR | RMB | JPY | CHF | Rate String deriving (Eq, Show, Read)
 
 --Representation of a contract
@@ -164,11 +145,11 @@ data Contract =
   | Give Contract
   | And  Contract Contract
   | Or   Contract Contract
-  | Cond    (Obs Double) Contract Contract   
+  | Cond    (Obs Bool) Contract Contract   
   | Scale   (Obs Double) Contract          
-  | When    Date Contract
-  | Anytime Date Date Contract            
-  | Until   Date Contract           
+  | When    (Obs Bool) Contract
+  | Anytime (Obs Bool) Contract            
+  | Until   (Obs Bool) Contract           
   deriving (Show, Read)
 
 
@@ -191,61 +172,92 @@ cOr = Or
 scale :: Obs Double  -> Contract -> Contract
 scale = Scale
 
-cond :: Obs Double -> Contract -> Contract -> Contract
+cond :: Obs Bool -> Contract -> Contract -> Contract
 cond = Cond
 
-cWhen :: Date-> Contract -> Contract
+cWhen :: Obs Bool-> Contract -> Contract
 cWhen = When
 
-anytime :: Date -> Date -> Contract -> Contract
+anytime :: Obs Bool -> Contract -> Contract
 anytime = Anytime
 
-cUntil :: Date -> Contract -> Contract
+cUntil :: Obs Bool -> Contract -> Contract
 cUntil = Until
 
-
+--Ties a constant to an Observable 
 konst :: Obs a -> b -> Obs b
 konst (O(o1,_)) x = (O(o1, x))
 
+---Used in when, checks if the contract must be activated in the current date
 at :: Date -> Obs Bool
 at t 
-           |mkDate  >= t = O( "Executed", True) 
-           |otherwise    = O( "Not executed", False)
-
+           |mkDate  >= t = O( date2String t, True) 
+           |otherwise    = O( date2String t , False)
+--
+--Similar to at, check an interval during which
 between :: Date -> Date -> Obs Bool
-between t1 t2 = konst (O("Current Time", mkDate))(mkDate >= t1 && mkDate <= t2)
+between t1 t2 = konst (O( ((date2String t1) ++ " and " ++ (date2String t2)), mkDate))(mkDate >= t1 && mkDate <= t2)
 
+checkObs o1 o2 = O(nameObs o1, valObs o1 == valObs o2)
 
 --Forward (fwd) Contract Defintion
 --fwd :: Obs a -> Currency -> Contract
-fwd t q k =  cWhen t (scale ((konst q)(valObs q)) (one k)) 
+fwd t q k =  cWhen (at t) (scale ((konst q)(valObs q)) (one k)) 
 
 swap ::  Contract -> Contract -> Contract
 swap c1 c2 =   c1 `cAnd` (give c2)
 
 --european :: Obs Date -> Contract -> Contract
-european t c = cWhen  t (c `cOr` zero)
+european t c = cWhen (at t) (c `cOr` zero)
 
 --american :: Date -> Date -> Contract -> Contract
-american t1 t2 c = anytime t1 t2 (c `cOr` zero)
+american t1 t2 c = anytime (between t1 t2) (c `cOr` zero)
 
 
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 --Printing
 -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- 
 --Naive Print, represent all the things!!
-represent :: Contract -> String
-represent c = case c of
-    Zero -> "Contract no obligations, no rights."
+indent :: Int -> String -> String
+indent i str  = "\n" ++ (replicate i ' ') ++ str
+
+--Prints RECEIVABLE contracts
+rPrint :: Contract -> String
+rPrint c = case c of
+    Zero -> indent 1 "Contract with no obligations, no rights."
     One k->  " " ++ show k 
-    Give u -> " PAY " ++ represent u
-    And u1 u2-> represent u1 ++ " AND " ++ represent u2
-    Or u1 u2 -> " OPTION " ++ represent u1 ++ " OR " ++ "OPTION " ++ represent u2
-    Cond (O(o1,o2)) u1 u2 -> "If "++ o1 ++ " " ++ show o2 ++ " " ++ represent u1 ++ "OTHERWISE" ++ represent u2
-    Scale (O(o1,o2)) u -> o1 ++ represent u ++ " " ++ show o2 ++ " "
-    When t u1-> date2String t ++ " "  ++ represent u1 ++ " "
-    Anytime t1 t2 u -> "To be exercised between " ++ date2String t1 ++ " and " ++ date2String t2 ++ " "++ represent u
-    Until t u -> "Until " ++ date2String t ++ " " ++ represent u 
-    
+    Give u -> " PAY " ++ pPrint u
+    And u1 u2-> rPrint u1 ++ indent 2 "AND" ++ indent 1 ( rPrint u2 )
+    Or u1 u2 -> indent 1 "OPTION " ++ rPrint u1 ++ " OR " ++ indent 2 "OPTION " ++ rPrint u2
+    Cond (O(o1,o2)) u1 u2 -> "If "++ o1 ++ " " ++ show o2 ++ " " ++ rPrint u1 ++ "OTHERWISE" ++ rPrint u2
+    Scale (O(o1,o2)) u -> "RECEIVE " ++ o1 ++ rPrint u ++ " " ++ show o2 ++ " "
+    When (O(o1,o2)) u1-> indent 1 "On the " ++ o1 ++ indent 2 (rPrint u1) ++ "\n"  
+    Anytime (O(o1,o2)) u -> "Contract executable between " ++ o1 ++ indent 2 (rPrint u)
+    Until (O(o1,o2)) u -> indent 2 "Until " ++ o1 ++ " " ++ rPrint u 
 
+--Same as print but for PAYABLE contracts
+pPrint :: Contract -> String
+pPrint u = case u of 
+    Zero -> indent 1 "Contract with no obligations, no rights."
+    One k->  " " ++ show k 
+    Give u -> " PAY " ++ pPrint u  
+    And u1 u2-> pPrint u1 ++ indent 2 "AND" ++ indent 1 ( pPrint u2 )
+    Or u1 u2 -> indent 1 "OPTION " ++ pPrint u1 ++ " OR " ++ indent 2 "OPTION " ++ pPrint u2
+    Cond (O(o1,o2)) u1 u2 -> "If "++ o1 ++ " " ++ show o2 ++ " " ++ pPrint u1 ++ "OTHERWISE" ++ pPrint u2
+    Scale (O(o1,o2)) u ->  o1 ++ pPrint u ++ " " ++ show o2 ++ " "
+    When (O(o1,o2)) u1-> indent 1 "On the " ++ o1 ++ indent 2 (pPrint u1) ++ "\n"  
+    Anytime (O(o1,o2)) u -> "Contract executable between " ++ o1 ++ indent 2 (pPrint u)
+    Until (O(o1,o2)) u -> indent 2 "Until " ++ o1 ++ " " ++ pPrint u 
 
+-- OLD CODE ---------------------------------------------------------------------------------------------------------------------------------------------------------------
+--Date Manipulation------
+--Returns the day the contract expires
+horizon :: Date -> Day
+horizon (C(t1,t2,t3)) = getDay (C(t1,t2,t3))
+
+--returns the further/nearer date from now ("day 0") in days
+maxDate :: Date -> Date -> Date
+maxDate (C(t1,t2,t3))(C(s1,s2,s3)) = max (C(t1,t2,t3)) (C(s1,s2,s3))
+
+minDate :: Date -> Date -> Date
+minDate (C(t1,t2,t3))(C(s1,s2,s3)) = min (C(t1,t2,t3)) (C(s1,s2,s3))

@@ -16,12 +16,12 @@ main =do
        putStr ("Pick=one 0,1,2,...length-1 \n")
        txt <- getLine
        let c = creads!!(read txt)
-       putStrLn ("Read:\n"++represent c)
+       putStrLn ("Read:\n"++ rPrint c)
        main
 
 showcontracts [] = putStrLn "\nDone!"
 showcontracts (c:cs)
- = do putStrLn ("Read:\n"++represent c)
+ = do putStrLn ("Read:\n"++ rPrint c)
       putStr "continue?"
       getLine
       showcontracts cs
