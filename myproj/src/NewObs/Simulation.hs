@@ -2,12 +2,12 @@ module Simulation where
 
 import NewObs
 import Test
+import System.Environment
+
+ 
 
 
- --11. a notion of the current time
- -- 12. a way to enter/make up future INDEPENDENT observable values
- -- 13. a way to step time forward
- -- 14. some whay to record history - transaction log
+ -- 14. some way to record history - transaction log
  -- 15. Given current time, a way to see if contract has been triggered.
      -- simulate today futureObs contract
       -- | triggered contract today = .....
@@ -21,13 +21,28 @@ import Test
        -- | otherwise = simulate tomorrow futureObs' contract
 -- --
 
--- today [Date] -> Date
--- today x:xs = C x
+
+-- 11. a notion of the current time  time0= 2019/04/29 ; 3 year calendar from 29/04/2019
+calendar = take 1097 (iterate mkDate time0)
+
+--To travel through the Calendar List
+iterator = take 1097 (iterate count 0)
+count x = x  + 1
+
+--Retrieves a day out of the calendar
+today  n = calendar !! n
 
 
-today = take 1096 (iterate mkDate time0)
+
+-- 14. some way to record history - transaction log
+--transactionLog :: String -> String -> String
+transactionLog str [] = str  
+transactionLog str2 str1 = str2 ++ str1
 
 
+
+                   
+-- 12. a way to enter/make up future INDEPENDENT observable values
 libor t | t >= C(2021,10,01) = O("LIBOR 3month",0.0095338)
         | t >= C(2021,07,01) = O("LIBOR 3month",0.0098675)
         | t >= C(2021,04,01) = O("LIBOR 3month",0.0103025)
