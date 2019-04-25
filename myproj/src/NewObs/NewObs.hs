@@ -40,7 +40,6 @@ lift2 (+) o1 o2 = O(nameObs o2 ,(valObs o1) + (valObs o2))
 
 data Date = C (Integer,Int,Int) deriving (Show, Eq, Ord, Read)   -- | Day Int
 
-
 data Day =  Day Integer deriving (Show, Eq, Ord, Read)
 
 instance Num Day where
@@ -147,7 +146,7 @@ dMonth m = fromInteger(((m + 2) `mod` 12) + 1)
 --      v : Random variable
 
 
-data Currency = USD | GBP | EUR | RMB | JPY | CHF | Rate String deriving (Eq, Show, Read)
+data Currency = USD | GBP | EUR | RMB | JPY | CHF | Rate deriving (Eq, Show, Read)
 
 --Representation of a contract
 data Contract =

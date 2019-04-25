@@ -3,7 +3,7 @@ module Simulation where
 import NewObs
 import Test
 import System.Environment
-
+import System.IO
  
 
 
@@ -16,13 +16,7 @@ import System.Environment
     -- 16a - as part of future indepenent observables
     -- 16b - as the user?
 
--- simulate today futureObs contract
-       -- | triggered contract today = .....
-       -- | otherwise = simulate tomorrow futureObs' contract
--- --
-
-
--- 11. a notion of the current time  time0= 2019/04/29 ; 3 year calendar from 29/04/2019
+	-- 11. a notion of the current time  time0= 2019/04/29 ; 3 year calendar from 29/04/2019
 calendar = take 1097 (iterate mkDate time0)
 
 --To travel through the Calendar List
@@ -32,16 +26,33 @@ count x = x  + 1
 --Retrieves a day out of the calendar
 today  n = calendar !! n
 
+--Trigger
+trigger (obs) c | O(" ", c ) == True = "lala"
+              -- | anytime c == True = "lala"
+              -- | cUntil c == True = "lala"
+              -- |	cond c == True = "lala"
+              | otherwise = "lolo"
+			  
+-- -- 15. Given current time, a way to see if contract has been triggered.
+-- simulation:: Date -> Obs -> Contract -> String
+-- simulation t o c | c  
+                 -- |
+                 -- |
 
 
 -- 14. some way to record history - transaction log
---transactionLog :: String -> String -> String
-transactionLog str [] = str  
-transactionLog str2 str1 = str2 ++ str1
+-- The Idea is to create a String with all the outputs from the evaluation 
+-- Step 1  
+transactionLog = do
+                outh <- openFile "tiptop.txt" WriteMode
+                hPutStrLn outh "Try This Out\nand This too\n" --have a function here 
+                hClose outh
 
 
+  
 
-                   
+
+  
 -- 12. a way to enter/make up future INDEPENDENT observable values
 libor t | t >= C(2021,10,01) = O("LIBOR 3month",0.0095338)
         | t >= C(2021,07,01) = O("LIBOR 3month",0.0098675)
