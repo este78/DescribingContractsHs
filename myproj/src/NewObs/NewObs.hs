@@ -1,6 +1,9 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 module NewObs where
 
+import Numeric
+
+showFullPrecision x = showFFloat Nothing x ""
 
 -- ====================================================================================================================================================================
 --  OBSERVABLES
@@ -57,11 +60,11 @@ dayToInteger :: Day  -> Integer
 dayToInteger (Day x) = x
 
 --Create your own date
-mkDate ::  Date
-mkDate = (C(2019,4,26))
 
-time0 :: Date
-time0 = C(0,0,0)
+time0 = (C(2019,4,26))
+
+mkDate d = incrementDate d (Day 1)
+
 
 --Returns the difference between two dates in num of Days
 --dateDiff :: Date -> Date -> Day
@@ -98,7 +101,7 @@ processDay y m d = let d' = toInteger d
 --gets a date from a day number
 toDate :: Day -> Date 
 toDate g = let g' = dayToInteger g ; y = convertToYear g' ; d = convertToDays g' y ; m = convertToMonth d ;  
-                        in C(dYear y m, dMonth m, dDay d m)
+                        in C(dYear (correctYear (dayToInteger g) y) m, dMonth m, dDay d m)
                       
 
 --Day to Date Inner Workings
@@ -107,7 +110,12 @@ toDate g = let g' = dayToInteger g ; y = convertToYear g' ; d = convertToDays g'
 convertToYear g = (10000*g + 14780) `div` 3652425
 
 --convertToDays :: Int -> Integer -> Int
-convertToDays g y = g - (365*y + y `div` 4 - y `div` 100 + y `div` 400)
+convertToDays g y = let y' = fromInteger y ; g' = g - (365*y + y `div` 4 - y `div` 100 + y `div` 400)
+                    in convertToDays' y' g g'
+
+--Leap year Corrections
+convertToDays' y' g  g' | g' < 0 = g - (365*(y'-1) + (y'-1) `div` 4 - (y'-1) `div` 100 + (y'-1) `div` 400)
+                        |otherwise = g'
 
 --convertToMonth :: Int -> Int
 convertToMonth d = (100*d + 52) `div` 3060
@@ -121,7 +129,9 @@ dDay d m = fromInteger (d - ((m*306 + 5) `div` 10) + 1)
 --dMonth :: Int -> Int
 dMonth m = fromInteger(((m + 2) `mod` 12) + 1)
 
-
+--Leap Year Corrections
+correctYear g y  | (convertToDays g y) < 0 = y
+                 | otherwise = (y-1)
 -- =====================================================================================================================================================================
 -- COMBINATORS
 -- =====================================================================================================================================================================
@@ -191,14 +201,16 @@ konst (O(o1,_)) x = (O(o1, x))
 ---Used in when, checks if the contract must be activated in the current date
 at :: Date -> Obs Bool
 at t 
-           |mkDate  >= t = O( date2String t, True) 
+           |(mkDate time0)  >= t = O( date2String t, True) 
            |otherwise    = O( date2String t , False)
 --
 --Similar to at, check an interval during which
 between :: Date -> Date -> Obs Bool
-between t1 t2 = konst (O( ((date2String t1) ++ " and " ++ (date2String t2)), mkDate))(mkDate >= t1 && mkDate <= t2)
+between t1 t2 = konst (O( ((date2String t1) ++ " and " ++ (date2String t2)), (mkDate time0) )) ( (mkDate time0) >= t1 && (mkDate time0) <= t2)
 
-checkObs o1 o2 = O(nameObs o1, valObs o1 == valObs o2)
+--
+-- Checking Equivalence of Obs For Conditonal
+checkObs o1 o2 = O((nameObs o1 ++ " is " ++ show (valObs o1)), valObs o1 == valObs o2)
 
 --Forward (fwd) Contract Defintion
 --fwd :: Obs a -> Currency -> Contract
@@ -226,28 +238,28 @@ rPrint :: Contract -> String
 rPrint c = case c of
     Zero -> indent 1 "Contract with no obligations, no rights."
     One k->  " " ++ show k 
-    Give u -> " PAY " ++ pPrint u
+    Give u ->  "  PAY " ++ pPrint u
     And u1 u2-> rPrint u1 ++ indent 2 "AND" ++ indent 1 ( rPrint u2 )
-    Or u1 u2 -> indent 1 "OPTION " ++ rPrint u1 ++ " OR " ++ indent 2 "OPTION " ++ rPrint u2
-    Cond (O(o1,o2)) u1 u2 -> "If "++ o1 ++ " " ++ show o2 ++ " " ++ rPrint u1 ++ "OTHERWISE" ++ rPrint u2
+    Or u1 u2 -> indent 2 "OPTION " ++ rPrint u1 ++ indent 1 "OR" ++ indent 2 "OPTION " ++ rPrint u2
+    Cond (O(o1,o2)) u1 u2 -> indent 1 "IF "++ o1 ++ indent 2 (rPrint u1) ++ indent 1 "OTHERWISE" ++ indent 2(rPrint u2)
     Scale (O(o1,o2)) u -> "RECEIVE " ++ o1 ++ rPrint u ++ " " ++ show o2 ++ " "
-    When (O(o1,o2)) u1-> indent 1 "On the " ++ o1 ++ indent 2 (rPrint u1) ++ "\n"  
-    Anytime (O(o1,o2)) u -> "Contract executable between " ++ o1 ++ indent 2 (rPrint u)
-    Until (O(o1,o2)) u -> indent 2 "Until " ++ o1 ++ " " ++ rPrint u 
+    When (O(o1,o2)) u1-> indent 0 "On the " ++ o1 ++ indent 2 (rPrint u1) ++ "\n"  
+    Anytime (O(o1,o2)) u -> indent 0 "Contract executable between " ++ o1 ++ indent 2 (rPrint u)
+    Until (O(o1,o2)) u -> indent 0 "Until " ++ o1 ++ " " ++ rPrint u ++ "\n"
 
 --Same as print but for PAYABLE contracts
 pPrint :: Contract -> String
 pPrint u = case u of 
     Zero -> indent 1 "Contract with no obligations, no rights."
     One k->  " " ++ show k 
-    Give u -> " PAY " ++ pPrint u  
+    Give u -> "  PAY " ++ pPrint u  
     And u1 u2-> pPrint u1 ++ indent 2 "AND" ++ indent 1 ( pPrint u2 )
-    Or u1 u2 -> indent 1 "OPTION " ++ pPrint u1 ++ " OR " ++ indent 2 "OPTION " ++ pPrint u2
-    Cond (O(o1,o2)) u1 u2 -> "If "++ o1 ++ " " ++ show o2 ++ " " ++ pPrint u1 ++ "OTHERWISE" ++ pPrint u2
+    Or u1 u2 -> indent 2 "OPTION " ++ pPrint u1 ++ indent 1 "OR" ++ indent 2 "OPTION " ++ pPrint u2
+    Cond (O(o1,o2)) u1 u2 -> indent 1 "IF "++ o1 ++ indent 2 (pPrint u1) ++ indent 2 "OTHERWISE" ++ indent 2 (pPrint u2)
     Scale (O(o1,o2)) u ->  o1 ++ pPrint u ++ " " ++ show o2 ++ " "
-    When (O(o1,o2)) u1-> indent 1 "On the " ++ o1 ++ indent 2 (pPrint u1) ++ "\n"  
-    Anytime (O(o1,o2)) u -> "Contract executable between " ++ o1 ++ indent 2 (pPrint u)
-    Until (O(o1,o2)) u -> indent 2 "Until " ++ o1 ++ " " ++ pPrint u 
+    When (O(o1,o2)) u1-> indent 0 "On the " ++ o1 ++ indent 2 (pPrint u1) ++ "\n"  
+    Anytime (O(o1,o2)) u -> indent 0 "Contract executable between " ++ o1 ++ indent 2 (pPrint u)
+    Until (O(o1,o2)) u -> indent 0 "Until " ++ o1 ++ " " ++ pPrint u ++ "\n"
 
 -- OLD CODE ---------------------------------------------------------------------------------------------------------------------------------------------------------------
 --Date Manipulation------

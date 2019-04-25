@@ -2,6 +2,7 @@ module NewMain where
 
 import NewObs
 import Test
+import Numeric
 
 main :: IO ()
 

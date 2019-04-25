@@ -31,42 +31,38 @@ identify t r | nameObs r == "LIBOR" = libor (  decrementDate t (valObs r)  )
              | otherwise = libor (  decrementDate t (valObs r)  )
 --
 
-interestSwapFlt t principal r  = (scale  (  lift2 (*) principal (identify t r)  )
-                                        (One  CHF)
-                                 ) 
+interestSwapFlt t r  = (scale  (  identify t r  )  (One  (Rate (nameObs (identify t r))) )   ) 
 --
-interestSwapFxd t principal fxrate = (  scale  (lift2 (*)  principal  fxrate)
-                                                    (One  CHF)
-                                     ) 
+interestSwapFxd t fxrate = (  scale  (  fxrate )  (One  (Rate "Fixed")) ) 
 --
 swapContract  = cWhen ( at  (C(2019,1,10)) ) (
-                       interestSwapFlt (C(2019,1,10)) (O("Principal", 1000000))  (O("LIBOR",(Day 90)))
+                       interestSwapFlt (C(2019,1,10)) (O("LIBOR",(Day 90)))
                        `cAnd` give (
-                                    interestSwapFxd (C(2019,1,10)) (O("Principal", 1000000))  (O("Fixed Rate", 0.01))
+                                    interestSwapFxd (C(2019,1,10)) (O("Fixed Rate", 0.01))
                                    ) 
                 )
                 `cAnd` cWhen (at (C(2019,4,10)))(
-                             interestSwapFlt (C(2020,4,10)) (O("Principal", 1000000))  (O("LIBOR",(Day 90)))
+                             interestSwapFlt (C(2020,4,10)) (O("LIBOR",(Day 90)))
                             `cAnd` give (
-                                         interestSwapFxd (C(2020,4,10)) (O("Principal", 1000000))  (O("Fixed Rate", 0.01))
+                                         interestSwapFxd (C(2020,4,10)) (O("Fixed Rate", 0.01))
                                         )
                       )
                 `cAnd` cWhen (at (C(2019,7,10)))(
-                             interestSwapFlt (C(2020,7,10)) (O("Principal", 1000000))  (O("LIBOR",(Day 90)))
+                             interestSwapFlt (C(2020,7,10)) (O("LIBOR",(Day 90)))
                 `            cAnd` give (
-                                         interestSwapFxd (C(2020,7,10)) (O("Principal", 1000000))  (O("Fixed Rate", 0.01))
+                                         interestSwapFxd (C(2020,7,10)) (O("Fixed Rate", 0.01))
                                         ) 
                        )
                 `cAnd` cWhen (at (C(2019,10,10)))(
-                              interestSwapFlt (C(2020,10,10)) (O("Principal", 1000000))  (O("LIBOR",(Day 90)))
+                              interestSwapFlt (C(2020,10,10)) (O("LIBOR",(Day 90)))
                               `cAnd` give (
-                                           interestSwapFxd (C(2020,10,10)) (O("Principal", 1000000))  (O("Fixed Rate", 0.01))
+                                           interestSwapFxd (C(2020,10,10)) (O("Fixed Rate", 0.01))
                                           ) 
                        )
                 `cAnd` cWhen (at (C(2020,1,10)))(
-                             interestSwapFlt (C(2020,1,10)) (O("Principal", 1000000))  (O("LIBOR",(Day 90)))
+                             interestSwapFlt (C(2020,1,10)) (O("LIBOR",(Day 90)))
                 `            cAnd` give (
-                                         interestSwapFxd (C(2020,1,10)) (O("Principal", 1000000))  (O("Fixed Rate", 0.01))
+                                         interestSwapFxd (C(2020,1,10)) (O("Fixed Rate", 0.01))
                                         ) 
                        )
 --
@@ -79,13 +75,55 @@ europeanContract = european (C(2020,04,01))
 checkPrice p t = checkObs p (priceToday (nameObs p) t)
 
 americanCall = cUntil (at (C(2019,6,10)))
-                ( cond (checkPrice (O("Oil(Brent)", 0.47))  mkDate )  
-                      (give (  scale (lift2 (*) 
+                ( cond (checkPrice (O("Oil(Brent)", 0.47))  (mkDate time0) )  
+                      ( cAnd ( scale (lift2 (*) 
                                             (O("Price of Oil(Brent)", 0.47))
                                             (O("Hundred Barrels", 100))
                                      ) 
-                                     (one USD)
-                            ) 
-                      )
+                                     (one USD) 
+                             )
+                             ( give (scale (O("Call Premium" , 0.8)) (one USD) )  )
+                      ) 
                      ( give (scale (O("Call Premium" , 0.8)) (one USD) )  )
                 )
+--
+
+-- ORIGINAL SWAP CONTRACT
+-- interestSwapFlt t principal r  = (scale  (  lift2 (*) principal (identify t r)  )
+                                        -- (One  CHF)
+                                 -- ) 
+-- --
+-- interestSwapFxd t principal fxrate = (  scale  (lift2 (*)  principal  fxrate)
+                                                    -- (One  CHF)
+                                     -- ) 
+-- --
+-- swapContract  = cWhen ( at  (C(2019,1,10)) ) (
+                       -- interestSwapFlt (C(2019,1,10)) (O("Principal", 1000000))  (O("LIBOR",(Day 90)))
+                       -- `cAnd` give (
+                                    -- interestSwapFxd (C(2019,1,10)) (O("Principal", 1000000))  (O("Fixed Rate", 0.01))
+                                   -- ) 
+                -- )
+                -- `cAnd` cWhen (at (C(2019,4,10)))(
+                             -- interestSwapFlt (C(2020,4,10)) (O("Principal", 1000000))  (O("LIBOR",(Day 90)))
+                            -- `cAnd` give (
+                                         -- interestSwapFxd (C(2020,4,10)) (O("Principal", 1000000))  (O("Fixed Rate", 0.01))
+                                        -- )
+                      -- )
+                -- `cAnd` cWhen (at (C(2019,7,10)))(
+                             -- interestSwapFlt (C(2020,7,10)) (O("Principal", 1000000))  (O("LIBOR",(Day 90)))
+                -- `            cAnd` give (
+                                         -- interestSwapFxd (C(2020,7,10)) (O("Principal", 1000000))  (O("Fixed Rate", 0.01))
+                                        -- ) 
+                       -- )
+                -- `cAnd` cWhen (at (C(2019,10,10)))(
+                              -- interestSwapFlt (C(2020,10,10)) (O("Principal", 1000000))  (O("LIBOR",(Day 90)))
+                              -- `cAnd` give (
+                                           -- interestSwapFxd (C(2020,10,10)) (O("Principal", 1000000))  (O("Fixed Rate", 0.01))
+                                          -- ) 
+                       -- )
+                -- `cAnd` cWhen (at (C(2020,1,10)))(
+                             -- interestSwapFlt (C(2020,1,10)) (O("Principal", 1000000))  (O("LIBOR",(Day 90)))
+                -- `            cAnd` give (
+                                         -- interestSwapFxd (C(2020,1,10)) (O("Principal", 1000000))  (O("Fixed Rate", 0.01))
+                                        -- ) 
+                       -- )
