@@ -117,6 +117,9 @@ convertToDays g y = let y' = fromInteger y ; g' = g - (365*y + y `div` 4 - y `di
 convertToDays' y' g  g' | g' < 0 = g - (365*(y'-1) + (y'-1) `div` 4 - (y'-1) `div` 100 + (y'-1) `div` 400)
                         |otherwise = g'
 
+correctYear g y  | (g - (365*y + y `div` 4 - y `div` 100 + y `div` 400)) < 0 = (y-1)
+                 | otherwise = y
+
 --convertToMonth :: Int -> Int
 convertToMonth d = (100*d + 52) `div` 3060
 
@@ -129,9 +132,7 @@ dDay d m = fromInteger (d - ((m*306 + 5) `div` 10) + 1)
 --dMonth :: Int -> Int
 dMonth m = fromInteger(((m + 2) `mod` 12) + 1)
 
---Leap Year Corrections
-correctYear g y  | (convertToDays g y) < 0 = y
-                 | otherwise = (y-1)
+
 -- =====================================================================================================================================================================
 -- COMBINATORS
 -- =====================================================================================================================================================================
