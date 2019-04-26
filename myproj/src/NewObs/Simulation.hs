@@ -6,7 +6,108 @@ import System.Environment
 import System.IO
  
 
+--input data
 
+
+-- =========================================================================================================
+--                          ESCENARIO -I The Weather Hedge
+-- =========================================================================================================
+-- A local power company could see its bottom line negatively affected if the winter is unseasonably warm, 
+-- thereby lowering the demand for heating oil and gas. The power company could hedge against this outcome 
+-- by purchasing a contract that would pay out cash if the temperature averaged five degrees above the 
+-- historical average for the duration of winter. 
+-- On the other side of that trade could be a hedge fund that was betting on the seasonal patterns,
+-- rather than the unseasonable.
+
+--Hedge contract. Power Company
+weatherContractR = cWhen (At (O("",C(2019,1,2))) ) 
+                            (cond (IsTrue (O("Hotter Winter", True)))
+                                          (scale (O("Petrol costs compensation" , 1000000)) (One EUR))
+                                          (zero)
+                            )
+--The other side of the hedge, the Bank or other financial institution willing to take the trade for a premium.
+weatherContractP = cWhen (At (O("",C(2019,1,2))) ) 
+                            (cond (IsTrue (O("Hotter Winter", False)))
+                                          ( give(
+                                                 (scale (O("Petrol costs compensation" , 1000000)) (One EUR)) ) 
+                                          )
+                                          (zero)
+                            )
+--
+
+-- =======_Observables_=========
+
+--list of observable bool values
+boolObs = [  (Day 0, [])
+             , ((Day 1), [O("Hotter Winter",True), O("Average Winter",False) ] )
+             , ((Day 2), [O("Hotter Winter",False), O("Average Winter",False) ] )
+             , ((Day 3), [O("Hotter Winter",False), O("Average Winter",True) ] )
+            ]
+
+--start date (Day)
+today = C(2019,1,1)
+
+
+
+-- Also list of ofs double values
+-- [ ( Day   - ordered by Day - start with start day
+  -- , [Obs Double] -- all double observabel values for that day,
+  -- )
+-- ]
+
+-- [ ( 1, [O("X",3.0), O("Y",2.0), O("P",100000.0) ] )
+-- , ( 2, [O("X",3.1), O("Y",21.9), O("P",100000.0) ] )
+-- , ( 3, [O("X",3.15), O("Y",20.2), O("P",100000.0) ] )
+-- , ....
+-- ]
+-- Pro tip !  use 'replicate' to generate long streches were nothing changes
+
+sim [] c = []
+sim boolObs c = case c of
+                            When (At t) u | (incrementDate today (fst(head(boolObs)))) == (valObs t) 
+                                                           -> activateContract (incrementDate today (fst(head(boolObs)))) (snd (head(boolObs))) u
+                                          | otherwise -> (tlog (incrementDate today (fst(head(boolObs)))) [] Empty ): (sim (tail boolObs) c)
+                            Empty -> (tlog (incrementDate today (fst(head(boolObs)))) [] Empty ): (sim (tail boolObs) Empty)
+--
+-- Once the main clause of a contract is activated, look inside for other clauses												  
+
+activateContract date obs c = case c of
+                         Cond (IsTrue o) u1 u2 | valObs(matchContractToObs o obs) == True
+                                                                  -> ( tlog  date [o]  u1 ): sim (tail boolObs) Empty
+                                               | otherwise -> ( tlog  date [matchContractToObs o obs]  u2 ) : (sim (tail boolObs) Empty)
+--
+
+-- Checks fot the right obsevable in the list
+matchContractToObs o [] = (O(nameObs o, False))
+matchContractToObs o obs | eqComp o (head obs) = (head obs)
+                         | otherwise = matchContractToObs o (tail obs)
+
+--OUTPUT 
+tlog a b c = show ((date2String a, b, rPrint c)) ++ "\n"
+-- tlog : sim (today+1) (tail boolobs) (tail doubleobs) contract'
+-- = -- do something with today, heads of obs-lisrs, and contract
+   -- to get a transaction log for today  (tlog),
+   -- and poss. modifed contract'
+ 
+
+ 
+ 
+ -- Sim output data
+ -- transaction log = list of dated events
+
+-- [ (1, [], c0)
+-- , (2, [PAY CHF 1000], c1)
+-- , (3, [], c1)
+-- , (4, [PAY CHF 1000, RECEIVE USD 3000], c2)
+-- , (5, [CHOSE OPTION "A"], c3)
+-- , ...
+-- ]
+
+--tlog = ( Day, [Transaction], Contract)
+ 
+ 
+ 
+ 
  -- 14. some way to record history - transaction log
  -- 15. Given current time, a way to see if contract has been triggered.
      -- simulate today futureObs contract
@@ -14,17 +115,17 @@ import System.IO
       -- | otherwise = simulate tomorrow futureObs' contract
  -- 16. When choices are required, how are these input.
     -- 16a - as part of future indepenent observables
-    -- 16b - as the user?
+-- 16b - as the user?
 
-	-- 11. a notion of the current time  time0= 2019/04/29 ; 3 year calendar from 29/04/2019
-calendar = take 1097 (iterate mkDate time0)
+-- 11. a notion of the current time  time0= 2019/04/29 ; 3 year calendar from 29/04/2019
+-- calendar = take 1097 (iterate mkDate time0)
 
---To travel through the Calendar List
-iterator = take 1097 (iterate count 0)
-count x = x  + 1
+-- --To travel through the Calendar List
+-- iterator = take 1097 (iterate count 0)
+-- count x = x  + 1
 
---Retrieves a day out of the calendar
-today  n = calendar !! n
+-- --Retrieves a day out of the calendar
+-- today  n = calendar !! n
 
 --Trigger
 -- trigger obs c | at c == True = "foo"
@@ -32,7 +133,7 @@ today  n = calendar !! n
               -- | cUntil c == True = "foo"
               -- |	cond c == True = "foo"
               -- | otherwise = "bar"
-			  
+--
 -- -- 15. Given current time, a way to see if contract has been triggered.
 -- simulation:: Date -> Obs -> Contract -> String
 -- simulation t o c | trigger
@@ -41,37 +142,10 @@ today  n = calendar !! n
 -- 14. some way to record history - transaction log
 -- The Idea is to create a String with all the outputs from the evaluation 
 -- Step 1  
-transactionLog = do
-                outh <- openFile "tiptop.txt" WriteMode
-                hPutStrLn outh "Try This Out\nand This too\n" --have a function here 
-                hClose outh
+-- transactionLog = do
+                -- outh <- openFile "tiptop.txt" WriteMode
+                -- hPutStrLn outh "Try This Out\nand This too\n" --have a function here 
+                -- hClose outh
 
 
   
-
-
-  
--- 12. a way to enter/make up future INDEPENDENT observable values
-libor t | t >= C(2021,10,01) = O("LIBOR 3month",0.0095338)
-        | t >= C(2021,07,01) = O("LIBOR 3month",0.0098675)
-        | t >= C(2021,04,01) = O("LIBOR 3month",0.0103025)
-        | t >= C(2021,01,01) = O("LIBOR 3month",0.0103125)
-        | t >= C(2020,10,01) = O("LIBOR 3month",0.0101225)
-        | t >= C(2020,07,01) = O("LIBOR 3month",0.0094600)
-        | t >= C(2020,04,01) = O("LIBOR 3month",0.0090238)
-        | t >= C(2020,01,01) = O("LIBOR 3month",0.0089400)
-        | t >= C(2019,10,01) = O("LIBOR 3month",0.0090531)
-        | t >= C(2019,07,01) = O("LIBOR 3month",0.0078931)
-        | t >= C(2019,04,01) = O("LIBOR 3month",0.0072535)
-        | t >= C(2019,01,01) = O("LIBOR 3month",0.0080688)
-        | otherwise  = O("LIBOR 3month", 0.0)
---
-priceToday s t | s == "Oil(Brent)" && t == C(2020,4,26) = O(s ++ date2String t,0.47)
-               | s == "Oil(Brent)" && t == C(2020,4,27) = O(s ++ date2String t,0.48)
-               | s == "Oil(Brent)" && t == C(2020,4,28) = O(s ++ date2String t,0.48)
-               | s == "Oil(Brent)" && t == C(2020,4,29) = O(s ++ date2String t,0.49)
-               | s == "Gold gr." && t == C(2020,4,26) = O(s ++ date2String t,41.03)
-               | s == "Gold gr." && t == C(2020,4,27) = O(s ++ date2String t,41.23)
-               | s == "Gold gr." && t == C(2020,4,28) = O(s ++ date2String t,40.95)
-               | s == "Gold gr." && t == C(2020,4,29) = O(s ++ date2String t,41.5)
-               |otherwise = O(s ++ date2String t , 0.0)

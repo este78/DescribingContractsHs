@@ -3,6 +3,7 @@ module Test where
 
 import NewObs
 
+
 libor t | t >= C(2021,10,01) = O("on a Principal of 1000000 a",0.0095338)
         | t >= C(2021,07,01) = O("on a Principal of 1000000 a",0.0098675)
         | t >= C(2021,04,01) = O("on a Principal of 1000000 a",0.0103025)

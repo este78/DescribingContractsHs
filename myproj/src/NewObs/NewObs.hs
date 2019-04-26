@@ -32,6 +32,8 @@ createObs o1 o2 = O (o1, o2)
 lift2 :: (a -> b -> c) -> Obs a -> Obs b -> Obs c
 lift2 (+) o1 o2 = O(nameObs o2 ,(valObs o1) + (valObs o2))
 
+--Two Obs Eq comparison
+eqComp o1 o2 = (nameObs o1 ==  nameObs o2 && valObs o1 == valObs o2)
 
 -- ===================================================================================================================================================================
 --  DATE  
@@ -166,7 +168,8 @@ data Contract =
   | Scale   (Obs Double) Contract          
   | When    Condition Contract
   | Anytime Condition Contract            
-  | Until   Condition Contract           
+  | Until   Condition Contract 
+  | Empty   
   deriving (Show, Read)
 
 
@@ -200,6 +203,9 @@ anytime = Anytime
 
 cUntil :: Condition -> Contract -> Contract
 cUntil = Until
+
+empty :: Contract
+empty = Empty
 
 --Ties a constant to an Observable 
 konst :: Obs a -> b -> Obs b
@@ -254,6 +260,7 @@ rPrint c = case c of
     When (At(O(o1,o2))) u1-> indent 0 "On the " ++ date2String o2 ++ indent 2 (rPrint u1) ++ "\n"  
     Anytime (Between(O(o1,o2)) (O(o3,o4))) u -> indent 0 "Contract executable between " ++ date2String o2 ++ " and " ++ date2String o4 ++ indent 2 (rPrint u)
     Until (IsTrue(O(o1,o2))) u -> indent 0 "Until " ++ o1 ++ " " ++ rPrint u ++ "\n"
+    Empty -> " "
 
 --Same as print but for PAYABLE contracts
 pPrint :: Contract -> String
@@ -268,7 +275,7 @@ pPrint u = case u of
     When (At(O(o1,o2))) u1-> indent 0 "On the " ++ date2String o2 ++ indent 2 (pPrint u1) ++ "\n"  
     Anytime (Between(O(o1,o2)) (O(o3,o4))) u -> indent 0 "Contract executable between " ++ date2String o2 ++ " and " ++ date2String o4  ++ indent 2 (pPrint u)
     Until (IsTrue(O(o1,o2))) u -> indent 0 "Until " ++ o1  ++ " " ++ pPrint u ++ "\n"
-
+    Empty -> " "
 -- OLD CODE ---------------------------------------------------------------------------------------------------------------------------------------------------------------
 --Date Manipulation------
 --Returns the day the contract expires
