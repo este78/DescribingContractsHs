@@ -145,8 +145,15 @@ dMonth m = fromInteger(((m + 2) `mod` 12) + 1)
 --      p : Value process
 --      v : Random variable
 
+data Condition = 
+      At (Obs Date)
+    | IsTrue (Obs Bool)
+    | Comp (Obs Double)(Obs Double)
+    | Between (Obs Date) (Obs Date)
+    deriving (Show, Read)
+--
 
-data Currency = USD | GBP | EUR | RMB | JPY | CHF | Rate deriving (Eq, Show, Read)
+data Currency = USD | GBP | EUR | RMB | JPY | CHF | Rate String deriving (Eq, Show, Read)
 
 --Representation of a contract
 data Contract =
@@ -155,11 +162,11 @@ data Contract =
   | Give Contract
   | And  Contract Contract
   | Or   Contract Contract
-  | Cond    (Obs Bool) Contract Contract   
+  | Cond    Condition Contract Contract   
   | Scale   (Obs Double) Contract          
-  | When    (Obs Bool) Contract
-  | Anytime (Obs Bool) Contract            
-  | Until   (Obs Bool) Contract           
+  | When    Condition Contract
+  | Anytime Condition Contract            
+  | Until   Condition Contract           
   deriving (Show, Read)
 
 
@@ -182,16 +189,16 @@ cOr = Or
 scale :: Obs Double  -> Contract -> Contract
 scale = Scale
 
-cond :: Obs Bool -> Contract -> Contract -> Contract
+cond :: Condition -> Contract -> Contract -> Contract
 cond = Cond
 
-cWhen :: Obs Bool-> Contract -> Contract
+cWhen :: Condition -> Contract -> Contract
 cWhen = When
 
-anytime :: Obs Bool -> Contract -> Contract
+anytime :: Condition -> Contract -> Contract
 anytime = Anytime
 
-cUntil :: Obs Bool -> Contract -> Contract
+cUntil :: Condition -> Contract -> Contract
 cUntil = Until
 
 --Ties a constant to an Observable 
@@ -210,20 +217,21 @@ between t1 t2 = konst (O( ((date2String t1) ++ " and " ++ (date2String t2)), (mk
 
 --
 -- Checking Equivalence of Obs For Conditonal
-checkObs o1 o2 = O((nameObs o1 ++ " is " ++ show (valObs o1)), valObs o1 == valObs o2)
+
+comp (Comp o1 o2) = O((nameObs o1 ++ " is " ++ show (valObs o1)), valObs o1 == valObs o2)
 
 --Forward (fwd) Contract Defintion
 --fwd :: Obs a -> Currency -> Contract
-fwd t q k =  cWhen (at t) (scale ((konst q)(valObs q)) (one k)) 
+fwd t q k =  cWhen (At t) (scale ((konst q)(valObs q)) (one k)) 
 
 swap ::  Contract -> Contract -> Contract
 swap c1 c2 =   c1 `cAnd` (give c2)
 
 --european :: Obs Date -> Contract -> Contract
-european t c = cWhen (at t) (c `cOr` zero)
+european t c = cWhen (At t) (c `cOr` zero)
 
 --american :: Date -> Date -> Contract -> Contract
-american t1 t2 c = anytime (between t1 t2) (c `cOr` zero)
+american t1 t2 c = anytime (IsTrue $ between t1 t2) (c `cOr` zero)
 
 
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -238,28 +246,28 @@ rPrint :: Contract -> String
 rPrint c = case c of
     Zero -> indent 1 "Contract with no obligations, no rights."
     One k->  " " ++ show k 
-    Give u ->  "  PAY " ++ pPrint u
+    Give u -> indent 2 "PAY " ++ pPrint u
     And u1 u2-> rPrint u1 ++ indent 2 "AND" ++ indent 1 ( rPrint u2 )
     Or u1 u2 -> indent 2 "OPTION " ++ rPrint u1 ++ indent 1 "OR" ++ indent 2 "OPTION " ++ rPrint u2
-    Cond (O(o1,o2)) u1 u2 -> indent 1 "IF "++ o1 ++ indent 2 (rPrint u1) ++ indent 1 "OTHERWISE" ++ indent 2(rPrint u2)
+    Cond (IsTrue (O(o1,o2))) u1 u2 -> indent 1 "IF "++ o1 ++ " is " ++ show o2 ++ indent 2 (rPrint u1) ++ indent 1 "OTHERWISE" ++ indent 2(rPrint u2)
     Scale (O(o1,o2)) u -> "RECEIVE " ++ o1 ++ rPrint u ++ " " ++ show o2 ++ " "
-    When (O(o1,o2)) u1-> indent 0 "On the " ++ o1 ++ indent 2 (rPrint u1) ++ "\n"  
-    Anytime (O(o1,o2)) u -> indent 0 "Contract executable between " ++ o1 ++ indent 2 (rPrint u)
-    Until (O(o1,o2)) u -> indent 0 "Until " ++ o1 ++ " " ++ rPrint u ++ "\n"
+    When (At(O(o1,o2))) u1-> indent 0 "On the " ++ date2String o2 ++ indent 2 (rPrint u1) ++ "\n"  
+    Anytime (Between(O(o1,o2)) (O(o3,o4))) u -> indent 0 "Contract executable between " ++ date2String o2 ++ " and " ++ date2String o4 ++ indent 2 (rPrint u)
+    Until (IsTrue(O(o1,o2))) u -> indent 0 "Until " ++ o1 ++ " " ++ rPrint u ++ "\n"
 
 --Same as print but for PAYABLE contracts
 pPrint :: Contract -> String
 pPrint u = case u of 
     Zero -> indent 1 "Contract with no obligations, no rights."
     One k->  " " ++ show k 
-    Give u -> "  PAY " ++ pPrint u  
+    Give u -> indent 2 "GIVE " ++ rPrint u  
     And u1 u2-> pPrint u1 ++ indent 2 "AND" ++ indent 1 ( pPrint u2 )
     Or u1 u2 -> indent 2 "OPTION " ++ pPrint u1 ++ indent 1 "OR" ++ indent 2 "OPTION " ++ pPrint u2
-    Cond (O(o1,o2)) u1 u2 -> indent 1 "IF "++ o1 ++ indent 2 (pPrint u1) ++ indent 2 "OTHERWISE" ++ indent 2 (pPrint u2)
+    Cond (IsTrue (O(o1,o2))) u1 u2 -> indent 1 "IF "++ o1 ++ " is " ++ show o2 ++ indent 2 (pPrint u1) ++ indent 2 "OTHERWISE" ++ indent 2 (pPrint u2)
     Scale (O(o1,o2)) u ->  o1 ++ pPrint u ++ " " ++ show o2 ++ " "
-    When (O(o1,o2)) u1-> indent 0 "On the " ++ o1 ++ indent 2 (pPrint u1) ++ "\n"  
-    Anytime (O(o1,o2)) u -> indent 0 "Contract executable between " ++ o1 ++ indent 2 (pPrint u)
-    Until (O(o1,o2)) u -> indent 0 "Until " ++ o1 ++ " " ++ pPrint u ++ "\n"
+    When (At(O(o1,o2))) u1-> indent 0 "On the " ++ date2String o2 ++ indent 2 (pPrint u1) ++ "\n"  
+    Anytime (Between(O(o1,o2)) (O(o3,o4))) u -> indent 0 "Contract executable between " ++ date2String o2 ++ " and " ++ date2String o4  ++ indent 2 (pPrint u)
+    Until (IsTrue(O(o1,o2))) u -> indent 0 "Until " ++ o1  ++ " " ++ pPrint u ++ "\n"
 
 -- OLD CODE ---------------------------------------------------------------------------------------------------------------------------------------------------------------
 --Date Manipulation------

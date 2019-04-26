@@ -27,7 +27,7 @@ count x = x  + 1
 today  n = calendar !! n
 
 --Trigger
--- trigger obs c | cWhen c == True = "foo"
+-- trigger obs c | at c == True = "foo"
               -- | anytime c == True = "foo"
               -- | cUntil c == True = "foo"
               -- |	cond c == True = "foo"
@@ -35,9 +35,7 @@ today  n = calendar !! n
 			  
 -- -- 15. Given current time, a way to see if contract has been triggered.
 -- simulation:: Date -> Obs -> Contract -> String
--- simulation t o c | c  
-                 -- |
-                 -- |
+-- simulation t o c | trigger
 
 
 -- 14. some way to record history - transaction log
