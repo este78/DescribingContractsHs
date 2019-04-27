@@ -1,7 +1,6 @@
 module Simulation where
 
 import NewObs
-import Test
 import System.Environment
 import System.IO
  
@@ -20,13 +19,13 @@ import System.IO
 -- rather than the unseasonable.
 
 --Hedge contract. Power Company
-weatherContractR = cWhen (At (O("",C(2019,1,2))) ) 
+wContractR = cWhen (At (O("", Day 3)) ) 
                             (cond (IsTrue (O("Hotter Winter", True)))
                                           (scale (O("Petrol costs compensation" , 1000000)) (One EUR))
                                           (zero)
                             )
 --The other side of the hedge, the Bank or other financial institution willing to take the trade for a premium.
-weatherContractP = cWhen (At (O("",C(2019,1,2))) ) 
+wContractP = cWhen (At (O("", Day 3)) ) 
                             (cond (IsTrue (O("Hotter Winter", True)))
                                           ( give(
                                                  (scale (O("Petrol costs compensation" , 1000000)) (One EUR)) ) 
@@ -39,35 +38,39 @@ weatherContractP = cWhen (At (O("",C(2019,1,2))) )
 
 --list of observable bool values
 boolObs = [  (Day 0, [])
-             , ((Day 1), [O("Hotter Winter",True), O("Average Winter",False) ] )
+             , ((Day 1), [O("Hotter Winter",False), O("Average Winter",True) ] )
              , ((Day 2), [O("Hotter Winter",False), O("Average Winter",True) ] )
              , ((Day 3), [O("Hotter Winter",True), O("Average Winter",False) ] )
+             , ((Day 4), [] )
+             , ((Day 5), [O("Hotter Winter",False), O("Average Winter",True) ] )
+             , ((Day 6), [] )
             ]
 
---start date (Day)
-today = C(2019,1,1)
+
+--calendar t = incrementDate t (Day 1) 
+                         
 
 -- =======_BARE BONES SIMULATOR_============
 --The sim function looks into the primitives that form the contract. This is bare bones and deals with the contracts detailed above
 sim1 [] c = []
-sim1 boolObs c = case c of
-                            When (At t) u | (incrementDate today $ fst $ head $ boolObs) == (valObs t) 
-                                                           -> activateContract (incrementDate today $ fst $ head $ boolObs) (snd $ head $ boolObs) u
-                                          | otherwise -> (tlog (incrementDate today $ fst $ head $ boolObs) [] [] ): (sim1 (tail boolObs) c)
-                            
-                            Empty -> (tlog (incrementDate today $ fst $ head $ boolObs) [] [Empty] ): (sim1 (tail boolObs) Empty)
+sim1 ((today,values):boolObs) c = case c of
+                            When (At t) u | today == (valObs t) -> activateContract today values u
+                                          | otherwise -> (tlog today [] [] ): (sim1 boolObs c)
+                     
+                            Empty -> (tlog today [] [Empty] ): (sim1 (tail boolObs) Empty)
+
 --
 -- Once the main clause of a contract is activated, look inside for other clauses												  
-activateContract date obs c = case c of
-                         Cond (IsTrue o) u1 u2 | valObs(matchContractToObs o obs) == True
-                                                                  -> ( tlog  date [o]  [u1] ): sim1 (tail boolObs) Empty
-                                               | otherwise -> ( tlog  date [matchContractToObs o obs]  [u2] ) : (sim1 (tail boolObs) Empty)
+activateContract today values c = case c of
+                                  Cond (IsTrue o) u1 u2 | valObs(matchContractToObs o values) == True
+                                                                  -> ( tlog  today [o]  [u1] ): sim1 (tail boolObs) Empty
+                                                        | otherwise -> ( tlog  today [matchContractToObs o values]  [u2] ) : (sim1 (tail boolObs) Empty)
 --
 
 -- Checks fot the right obsevable in the list
 matchContractToObs o [] = (O(nameObs o, False))
-matchContractToObs o obs | eqComp o (head obs) = (head obs)
-                         | otherwise = matchContractToObs o (tail obs)
+matchContractToObs o (ob:obs) | eqComp o ob = ob
+                              | otherwise = matchContractToObs o (tail obs)
 --
 
 
@@ -133,5 +136,3 @@ tlog a b c = (a, b, c)
                 -- hPutStrLn outh "Try This Out\nand This too\n" --have a function here 
                 -- hClose outh
 
-
-  

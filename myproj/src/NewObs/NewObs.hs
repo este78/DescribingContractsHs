@@ -148,9 +148,9 @@ dMonth m = fromInteger(((m + 2) `mod` 12) + 1)
 --      v : Random variable
 
 data Condition = 
-      At (Obs Date)
+      At (Obs Day)
     | IsTrue (Obs Bool)
-    | Comp (Obs Double)(Obs Double)
+    | Comp (Obs Double)
     | Between (Obs Date) (Obs Date)
     deriving (Show, Read)
 --
@@ -222,9 +222,6 @@ between :: Date -> Date -> Obs Bool
 between t1 t2 = konst (O( ((date2String t1) ++ " and " ++ (date2String t2)), (mkDate time0) )) ( (mkDate time0) >= t1 && (mkDate time0) <= t2)
 
 --
--- Checking Equivalence of Obs For Conditonal
-
-comp (Comp o1 o2) = O((nameObs o1 ++ " is " ++ show (valObs o1)), valObs o1 == valObs o2)
 
 --Forward (fwd) Contract Defintion
 --fwd :: Obs a -> Currency -> Contract
@@ -257,9 +254,9 @@ rPrint c = case c of
     Or u1 u2 -> indent 2 "OPTION " ++ rPrint u1 ++ indent 1 "OR" ++ indent 2 "OPTION " ++ rPrint u2
     Cond (IsTrue (O(o1,o2))) u1 u2 -> indent 1 "IF "++ o1 ++ " is " ++ show o2 ++ indent 2 (rPrint u1) ++ indent 1 "OTHERWISE" ++ indent 2(rPrint u2)
     Scale (O(o1,o2)) u -> indent 1 "RECEIVE " ++ o1 ++ rPrint u ++ " " ++ show o2 ++ " "
-    When (At(O(o1,o2))) u1-> indent 0 "On the " ++ date2String o2 ++ rPrint u1 ++ "\n"  
+    When (At(O(o1,o2))) u1-> indent 0 "On the " ++ show o2 ++ rPrint u1 ++ "\n"  
     Anytime (Between(O(o1,o2)) (O(o3,o4))) u -> indent 0 "Contract executable between " ++ date2String o2 ++ " and " ++ date2String o4 ++ indent 2 (rPrint u)
-    Until (IsTrue(O(o1,o2))) u -> indent 0 "Until " ++ o1 ++ " " ++ rPrint u ++ "\n"
+    Until (At(O(o1,o2))) u -> indent 0 "Until " ++ o1 ++ " " ++ rPrint u ++ "\n"
     Empty -> indent 1 "Contract Exercised"
 
 --Same as print but for PAYABLE contracts
@@ -272,19 +269,25 @@ pPrint u = case u of
     Or u1 u2 -> indent 2 "OPTION " ++ pPrint u1 ++ indent 1 "OR" ++ indent 2 "OPTION " ++ pPrint u2
     Cond (IsTrue (O(o1,o2))) u1 u2 -> indent 1 "IF "++ o1 ++ " is " ++ show o2 ++ indent 2 (pPrint u1) ++ indent 2 "OTHERWISE" ++ indent 2 (pPrint u2)
     Scale (O(o1,o2)) u -> indent 1 o1 ++ pPrint u ++ " " ++ show o2 ++ " "
-    When (At(O(o1,o2))) u1-> indent 0 "On the " ++ date2String o2 ++ pPrint u1 ++ "\n"  
+    When (At(O(o1,o2))) u1-> indent 0 "On the " ++ show o2 ++ pPrint u1 ++ "\n"  
     Anytime (Between(O(o1,o2)) (O(o3,o4))) u -> indent 0 "Contract executable between " ++ date2String o2 ++ " and " ++ date2String o4  ++ indent 2 (pPrint u)
-    Until (IsTrue(O(o1,o2))) u -> indent 0 "Until " ++ o1  ++ " " ++ pPrint u ++ "\n"
+    Until (At (O(o1,o2))) u -> indent 0 "Until " ++ o1  ++ " " ++ pPrint u ++ "\n"
     Empty -> indent 1 "Contract Exercised"
--- OLD CODE ---------------------------------------------------------------------------------------------------------------------------------------------------------------
+-- 
+
+
+--OLD CODE ---------------------------------------------------------------------------------------------------------------------------------------------------------------
 --Date Manipulation------
 --Returns the day the contract expires
-horizon :: Date -> Day
-horizon (C(t1,t2,t3)) = getDay (C(t1,t2,t3))
+-- horizon :: Date -> Day
+-- horizon (C(t1,t2,t3)) = getDay (C(t1,t2,t3))
 
---returns the further/nearer date from now ("day 0") in days
-maxDate :: Date -> Date -> Date
-maxDate (C(t1,t2,t3))(C(s1,s2,s3)) = max (C(t1,t2,t3)) (C(s1,s2,s3))
+-- --returns the further/nearer date from now ("day 0") in days
+-- maxDate :: Date -> Date -> Date
+-- maxDate (C(t1,t2,t3))(C(s1,s2,s3)) = max (C(t1,t2,t3)) (C(s1,s2,s3))
 
-minDate :: Date -> Date -> Date
-minDate (C(t1,t2,t3))(C(s1,s2,s3)) = min (C(t1,t2,t3)) (C(s1,s2,s3))
+-- minDate :: Date -> Date -> Date
+-- minDate (C(t1,t2,t3))(C(s1,s2,s3)) = min (C(t1,t2,t3)) (C(s1,s2,s3))
+
+-- Checking Equivalence of Obs For Conditonal
+--comp (Comp o1 o2) = O((nameObs o1 ++ " is " ++ show (valObs o1)), valObs o1 == valObs o2)
