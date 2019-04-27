@@ -24,6 +24,6 @@ back (_,_, a) = rPrint (head a)
 
 
 --human readable, kind of
-simulation1= putStrLn ( (prettyPrint (sim1 boolObs weatherContractR)) ++ "\n" ++ (prettyPrint (sim1 boolObs weatherContractP) ++ "\n") )
+simulation1= putStrLn ( "\nHedger Contract: \n" ++ (prettyPrint (sim1 boolObs weatherContractR)) ++ "\n" ++ "Speculator Contract: \n" ++ (prettyPrint (sim1 boolObs weatherContractP) ++ "\n") )
 --show the raw data
 simulation1Raw= putStrLn (show (sim1 boolObs weatherContractR) ++ "\n" ++ (show (sim1 boolObs weatherContractP) ++ "\n")) 

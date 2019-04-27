@@ -27,7 +27,7 @@ weatherContractR = cWhen (At (O("",C(2019,1,2))) )
                             )
 --The other side of the hedge, the Bank or other financial institution willing to take the trade for a premium.
 weatherContractP = cWhen (At (O("",C(2019,1,2))) ) 
-                            (cond (IsTrue (O("Hotter Winter", False)))
+                            (cond (IsTrue (O("Hotter Winter", True)))
                                           ( give(
                                                  (scale (O("Petrol costs compensation" , 1000000)) (One EUR)) ) 
                                           )
@@ -40,28 +40,15 @@ weatherContractP = cWhen (At (O("",C(2019,1,2))) )
 --list of observable bool values
 boolObs = [  (Day 0, [])
              , ((Day 1), [O("Hotter Winter",True), O("Average Winter",False) ] )
-             , ((Day 2), [O("Hotter Winter",False), O("Average Winter",False) ] )
-             , ((Day 3), [O("Hotter Winter",False), O("Average Winter",True) ] )
+             , ((Day 2), [O("Hotter Winter",False), O("Average Winter",True) ] )
+             , ((Day 3), [O("Hotter Winter",True), O("Average Winter",False) ] )
             ]
 
 --start date (Day)
 today = C(2019,1,1)
 
 
-
--- Also list of ofs double values
--- [ ( Day   - ordered by Day - start with start day
-  -- , [Obs Double] -- all double observabel values for that day,
-  -- )
--- ]
-
--- [ ( 1, [O("X",3.0), O("Y",2.0), O("P",100000.0) ] )
--- , ( 2, [O("X",3.1), O("Y",21.9), O("P",100000.0) ] )
--- , ( 3, [O("X",3.15), O("Y",20.2), O("P",100000.0) ] )
--- , ....
--- ]
--- Pro tip !  use 'replicate' to generate long streches were nothing changes
-
+--BARE BONES SIMULATOR--
 sim1 [] c = []
 sim1 boolObs c = case c of
                             When (At t) u | (incrementDate today (fst(head(boolObs)))) == (valObs t) 
@@ -81,10 +68,32 @@ activateContract date obs c = case c of
 matchContractToObs o [] = (O(nameObs o, False))
 matchContractToObs o obs | eqComp o (head obs) = (head obs)
                          | otherwise = matchContractToObs o (tail obs)
+--
+
 
 --OUTPUT 
 tlog a b [] = (a ,b, [])
 tlog a b c = (a, b, c)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 -- tlog : sim (today+1) (tail boolobs) (tail doubleobs) contract'
 -- = -- do something with today, heads of obs-lisrs, and contract
    -- to get a transaction log for today  (tlog),
@@ -104,6 +113,18 @@ tlog a b c = (a, b, c)
 -- , ...
 -- ]
 
+-- Also list of ofs double values
+-- [ ( Day   - ordered by Day - start with start day
+  -- , [Obs Double] -- all double observabel values for that day,
+  -- )
+-- ]
+
+-- [ ( 1, [O("X",3.0), O("Y",2.0), O("P",100000.0) ] )
+-- , ( 2, [O("X",3.1), O("Y",21.9), O("P",100000.0) ] )
+-- , ( 3, [O("X",3.15), O("Y",20.2), O("P",100000.0) ] )
+-- , ....
+-- ]
+-- Pro tip !  use 'replicate' to generate long streches were nothing changes
 --tlog = ( Day, [Transaction], Contract)
  
  
