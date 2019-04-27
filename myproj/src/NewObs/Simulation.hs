@@ -47,17 +47,17 @@ boolObs = [  (Day 0, [])
 --start date (Day)
 today = C(2019,1,1)
 
-
---BARE BONES SIMULATOR--
+-- =======_BARE BONES SIMULATOR_============
+--The sim function looks into the primitives that form the contract. This is bare bones and deals with the contracts detailed above
 sim1 [] c = []
 sim1 boolObs c = case c of
-                            When (At t) u | (incrementDate today (fst(head(boolObs)))) == (valObs t) 
-                                                           -> activateContract (incrementDate today (fst(head(boolObs)))) (snd (head(boolObs))) u
-                                          | otherwise -> (tlog (incrementDate today (fst(head(boolObs)))) [] [] ): (sim1 (tail boolObs) c)
-                            Empty -> (tlog (incrementDate today (fst(head(boolObs)))) [] [Empty] ): (sim1 (tail boolObs) Empty)
+                            When (At t) u | (incrementDate today $ fst $ head $ boolObs) == (valObs t) 
+                                                           -> activateContract (incrementDate today $ fst $ head $ boolObs) (snd $ head $ boolObs) u
+                                          | otherwise -> (tlog (incrementDate today $ fst $ head $ boolObs) [] [] ): (sim1 (tail boolObs) c)
+                            
+                            Empty -> (tlog (incrementDate today $ fst $ head $ boolObs) [] [Empty] ): (sim1 (tail boolObs) Empty)
 --
 -- Once the main clause of a contract is activated, look inside for other clauses												  
-
 activateContract date obs c = case c of
                          Cond (IsTrue o) u1 u2 | valObs(matchContractToObs o obs) == True
                                                                   -> ( tlog  date [o]  [u1] ): sim1 (tail boolObs) Empty
@@ -71,7 +71,7 @@ matchContractToObs o obs | eqComp o (head obs) = (head obs)
 --
 
 
---OUTPUT 
+-- =======_OUTPUT_================ 
 tlog a b [] = (a ,b, [])
 tlog a b c = (a, b, c)
 
