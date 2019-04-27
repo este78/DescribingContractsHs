@@ -62,19 +62,19 @@ today = C(2019,1,1)
 -- ]
 -- Pro tip !  use 'replicate' to generate long streches were nothing changes
 
-sim [] c = []
-sim boolObs c = case c of
+sim1 [] c = []
+sim1 boolObs c = case c of
                             When (At t) u | (incrementDate today (fst(head(boolObs)))) == (valObs t) 
                                                            -> activateContract (incrementDate today (fst(head(boolObs)))) (snd (head(boolObs))) u
-                                          | otherwise -> (tlog (incrementDate today (fst(head(boolObs)))) [] Empty ): (sim (tail boolObs) c)
-                            Empty -> (tlog (incrementDate today (fst(head(boolObs)))) [] Empty ): (sim (tail boolObs) Empty)
+                                          | otherwise -> (tlog (incrementDate today (fst(head(boolObs)))) [] [] ): (sim1 (tail boolObs) c)
+                            Empty -> (tlog (incrementDate today (fst(head(boolObs)))) [] [Empty] ): (sim1 (tail boolObs) Empty)
 --
 -- Once the main clause of a contract is activated, look inside for other clauses												  
 
 activateContract date obs c = case c of
                          Cond (IsTrue o) u1 u2 | valObs(matchContractToObs o obs) == True
-                                                                  -> ( tlog  date [o]  u1 ): sim (tail boolObs) Empty
-                                               | otherwise -> ( tlog  date [matchContractToObs o obs]  u2 ) : (sim (tail boolObs) Empty)
+                                                                  -> ( tlog  date [o]  [u1] ): sim1 (tail boolObs) Empty
+                                               | otherwise -> ( tlog  date [matchContractToObs o obs]  [u2] ) : (sim1 (tail boolObs) Empty)
 --
 
 -- Checks fot the right obsevable in the list
@@ -83,7 +83,8 @@ matchContractToObs o obs | eqComp o (head obs) = (head obs)
                          | otherwise = matchContractToObs o (tail obs)
 
 --OUTPUT 
-tlog a b c = show ((date2String a, b, rPrint c)) ++ "\n"
+tlog a b [] = (a ,b, [])
+tlog a b c = (a, b, c)
 -- tlog : sim (today+1) (tail boolobs) (tail doubleobs) contract'
 -- = -- do something with today, heads of obs-lisrs, and contract
    -- to get a transaction log for today  (tlog),
@@ -106,42 +107,6 @@ tlog a b c = show ((date2String a, b, rPrint c)) ++ "\n"
 --tlog = ( Day, [Transaction], Contract)
  
  
- 
- 
- -- 14. some way to record history - transaction log
- -- 15. Given current time, a way to see if contract has been triggered.
-     -- simulate today futureObs contract
-      -- | triggered contract today = .....
-      -- | otherwise = simulate tomorrow futureObs' contract
- -- 16. When choices are required, how are these input.
-    -- 16a - as part of future indepenent observables
--- 16b - as the user?
-
--- 11. a notion of the current time  time0= 2019/04/29 ; 3 year calendar from 29/04/2019
--- calendar = take 1097 (iterate mkDate time0)
-
--- --To travel through the Calendar List
--- iterator = take 1097 (iterate count 0)
--- count x = x  + 1
-
--- --Retrieves a day out of the calendar
--- today  n = calendar !! n
-
---Trigger
--- trigger obs c | at c == True = "foo"
-              -- | anytime c == True = "foo"
-              -- | cUntil c == True = "foo"
-              -- |	cond c == True = "foo"
-              -- | otherwise = "bar"
---
--- -- 15. Given current time, a way to see if contract has been triggered.
--- simulation:: Date -> Obs -> Contract -> String
--- simulation t o c | trigger
-
-
--- 14. some way to record history - transaction log
--- The Idea is to create a String with all the outputs from the evaluation 
--- Step 1  
 -- transactionLog = do
                 -- outh <- openFile "tiptop.txt" WriteMode
                 -- hPutStrLn outh "Try This Out\nand This too\n" --have a function here 
