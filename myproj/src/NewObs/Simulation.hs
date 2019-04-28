@@ -1,7 +1,9 @@
 module Simulation where
 
 import NewObs
-
+import CombDate
+import Combinators
+import Printing
 
 --input data
 
@@ -17,19 +19,25 @@ import NewObs
 -- rather than the unseasonable.
 
 --Hedge contract. Power Company
-wContractR = cWhen (At (O("", Day 3)) ) 
-                            (cond (IsTrue (O("Hotter Winter", True)))
-                                          (scale (O("Petrol costs compensation" , 1000000)) (One EUR))
-                                          (zero)
-                            )
+wContractR = 
+      cWhen (At (O("", Day 3)) ) 
+                (cond (IsTrue (O("Hotter Winter", True)))
+                             (scale (O("Petrol costs compensation" , 1000000)) 
+                                                                     (One EUR)
+                              )
+                              (zero)
+                )
 --The other side of the hedge, the Bank or other financial institution willing to take the trade for a premium.
-wContractP = cWhen (At (O("", Day 3)) ) 
-                            (cond (IsTrue (O("Hotter Winter", True)))
-                                          ( give(
-                                                 (scale (O("Petrol costs compensation" , 1000000)) (One EUR)) ) 
-                                          )
-                                          (zero)
-                            )
+wContractP = 
+      cWhen (At (O("", Day 3)) ) 
+                (cond (IsTrue (O("Hotter Winter", True)))
+                        ( give(
+                               (scale (O("Petrol costs compensation" , 1000000)) 
+                                                                     (One EUR))
+                              ) 
+                        )
+                        (zero)
+                )
 --
 
 -- =======_Observables_=========
@@ -49,7 +57,8 @@ boolObs = [  (Day 0, [])
                          
 
 -- =======_BARE BONES SIMULATOR_============
---The sim function looks into the primitives that form the contract. This is bare bones and deals with the contracts detailed above
+--The sim function looks into the primitives that form the contract. 
+--This is bare bones and deals with the contracts detailed above
 sim1 [] c = []
 sim1 ((today,values):boolObs) c = 
              case c of
@@ -60,18 +69,19 @@ sim1 ((today,values):boolObs) c =
 
                 Empty -> (tlog today [] [Empty] ) : (sim1 (tail boolObs) Empty)
 --
--- Once the main clause of a contract is activated, look inside for other clauses												  
+-- Once the main clause of a contract is activated, 
+-- look inside for other clauses												  
 activateContract today values c = 
              case c of
                Cond (IsTrue o) u1 u2 
                     | valObs(matchContractToObs o values) == True
-                        -> ( tlog  today [o]  [u1] ): sim1 (tail boolObs) Empty
+                       -> ( tlog  today [o]  [u1] ): sim1 (tail boolObs) Empty
                     | otherwise
-                        -> ( tlog  today [matchContractToObs o values]  [u2] )
-                                                   : (sim1 (tail boolObs) Empty)
+                       -> ( tlog  today [matchContractToObs o values]  [u2] )
+                                                : (sim1 (tail boolObs) Empty)
 --
 
--- Checks fot the right obsevable in the list
+-- Checks for the right obsevable in the list, tor produce 
 matchContractToObs o [] = (O(nameObs o, False))
 matchContractToObs o (ob:obs) | eqComp o ob = ob
                               | otherwise = matchContractToObs o obs
@@ -100,6 +110,11 @@ tlog a b c = (a, b, c)
 
 
 
+
+
+
+
+-- Leftover Code
 
 -- tlog : sim (today+1) (tail boolobs) (tail doubleobs) contract'
 -- = -- do something with today, heads of obs-lisrs, and contract

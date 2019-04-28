@@ -2,6 +2,9 @@ module Test where
 
 
 import NewObs
+import CombDate
+import Combinators
+import Printing
 
 
 libor t | t >= (Day 13) = O("on a Principal of 1000000 a",0.0095338)
@@ -68,20 +71,9 @@ swapContract  = cWhen ( At  ( O(" ", (Day 91)) ) ) (
                                         ) 
                        )
 --
-europeanContract = european ( O("Strike Date", (Day 10)) ) 
-                                         (give
-                                             (fwd (O(" ",Day 20)) (O(" ", 1000))  USD )
-                                         )
+
 --
-carLoan' = cWhen (At(O(" ", Day 1)))(scale (O("Principal", 24000)) (one EUR))      --u1
-         `cAnd`
-              (give (                                                             --u2
-                      (cWhen $ At (O(" ", Day 8)) )
-                         (scale (O("Variable APR" , 2000)) 
-                            (One EUR)
-                         )
-                    )
-              )
+
 
 -- ORIGINAL SWAP CONTRACT
 -- interestSwapFlt t principal r  = (scale  (  lift2 (*) principal (identify t r)  )

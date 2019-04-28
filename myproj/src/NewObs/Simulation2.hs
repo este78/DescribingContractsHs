@@ -2,6 +2,9 @@ module Simulation2 where
 
 
 import NewObs
+import CombDate
+import Combinators
+import Printing
 import Simulation
 
 -- ============================================================================
@@ -100,7 +103,8 @@ carLoan =
 --
 
 -- =======_BARE BONES SIMULATOR_============
---The sim function looks into the primitives that form the contract. This is bare bones and deals with the contracts detailed above
+--The sim function looks into the primitives that form the contract. 
+--This is bare bones and deals with the contracts detailed above
 sim2 [] c = []
 sim2 ((day,obs):doubObs) c = 
                    case c of
@@ -133,7 +137,7 @@ pair2Obs o (ob:obs) | (nameObs o) ==  "Variable APR"
                                    = O("Loan", (valObs o))
                     | otherwise = pair2Obs o obs
 --
-c2Obs u obs = case u of Scale o u1 ->scale (pair2Obs o obs) u1
+-- Examines And Clauses, they can get really complicated 
 -- 
 simAnd doubObs [] = sim2 doubObs Empty
 simAnd ((day,obs):doubObs) (c1:cs) = 
@@ -144,14 +148,15 @@ simAnd ((day,obs):doubObs) (c1:cs) =
             When (At t) u |day == (valObs t)-> (actContractAnd 
                                                     ((day,obs):doubObs) (u:cs) ) 
                           |otherwise        -> (tlog' day [] [] )
-                                                      :(simAnd doubObs (c1:cs))
+                                                     :(simAnd doubObs (c1:cs))
             Give u -> (tlog' day [] [give(c2Obs u obs)]) : (simAnd 
                                                       (doubObs) cs )
             Empty -> ( tlog' day [] [Empty] )  :  (sim2 doubObs Empty)
 --
+--Examines deeper clauses in the contract for processing
 --
 actContractAnd ((day,obs):doubObs) [] = (tlog' day [] [Empty]) 
-                                                           : sim2 doubObs Empty 
+                                                         : sim2 doubObs Empty 
 actContractAnd ((day,obs):doubObs) (u1:us) = 
          case u1 of
             And u11 u22 -> actContractAnd ((day,obs):doubObs) (u11:u22:us)
@@ -168,8 +173,11 @@ actContractAnd ((day,obs):doubObs) (u1:us) =
                                [(scale (pair2Obs o obs) u)]
                          ) : (simAnd doubObs us)
 -- 
+-- Standalone give U contract
+c2Obs u obs = case u of Scale o u1 ->scale (pair2Obs o obs) u1
 
--- =======_OUTPUT_================ 
+
+-- =======_OUTPUT_============================================================ 
 tlog' a [] c = (a,[],c)
 tlog' a b [] = (a ,b, [])
 tlog' a b c = (a, b, c)
@@ -232,21 +240,26 @@ doubObs = [
 --
 
 
+
+
+
+
+-- ================ Old Code =====================================
 -- simG [] c = []
 -- simG ((day,obs):doubObs) c = case c of
-                                  -- And u1 u2 -> simAnd ((day,obs):doubObs) [u1,u2]
-                                  -- When (At t) u | day == (valObs t) 
-                                                        -- -> actContract 
-                                                                      -- doubObs u
-                                                -- | otherwise 
-                                                       -- -> (tlog' day [] [] )
-                                                           -- : (simG doubObs c)
-                                  -- Scale o u -> (tlog' 
-                                                  -- day [pair2Obs o obs] 
-                                                  -- [(give $ 
-                                                      -- scale (pair2Obs o obs) u)]
+                          -- And u1 u2 -> simAnd ((day,obs):doubObs) [u1,u2]
+                          -- When (At t) u | day == (valObs t) 
+                                                 -- -> actContract 
+                                                             -- doubObs u
+                                       -- | otherwise 
+                                              -- -> (tlog' day [] [] )
+                                                     -- : (simG doubObs c)
+                          -- Scale o u -> (tlog' 
+                                             -- day [pair2Obs o obs] 
+                                             -- [(give $ 
+                                                 -- scale (pair2Obs o obs) u)]
                                                -- )
-                                                -- : (sim2 doubObs Empty)
+                                              -- : (sim2 doubObs Empty)
 
 -- --
 
