@@ -1,9 +1,7 @@
 module Simulation where
 
 import NewObs
-import System.Environment
-import System.IO
- 
+
 
 --input data
 
@@ -53,24 +51,30 @@ boolObs = [  (Day 0, [])
 -- =======_BARE BONES SIMULATOR_============
 --The sim function looks into the primitives that form the contract. This is bare bones and deals with the contracts detailed above
 sim1 [] c = []
-sim1 ((today,values):boolObs) c = case c of
-                            When (At t) u | today == (valObs t) -> activateContract today values u
-                                          | otherwise -> (tlog today [] [] ): (sim1 boolObs c)
-                     
-                            Empty -> (tlog today [] [Empty] ): (sim1 (tail boolObs) Empty)
+sim1 ((today,values):boolObs) c = 
+             case c of
+                When (At t) u | today == (valObs t)  
+                                  ->  activateContract today values u
+                              | otherwise 
+                                  -> (tlog today [] [] ) : (sim1 boolObs c)
 
+                Empty -> (tlog today [] [Empty] ) : (sim1 (tail boolObs) Empty)
 --
 -- Once the main clause of a contract is activated, look inside for other clauses												  
-activateContract today values c = case c of
-                                  Cond (IsTrue o) u1 u2 | valObs(matchContractToObs o values) == True
-                                                                  -> ( tlog  today [o]  [u1] ): sim1 (tail boolObs) Empty
-                                                        | otherwise -> ( tlog  today [matchContractToObs o values]  [u2] ) : (sim1 (tail boolObs) Empty)
+activateContract today values c = 
+             case c of
+               Cond (IsTrue o) u1 u2 
+                    | valObs(matchContractToObs o values) == True
+                        -> ( tlog  today [o]  [u1] ): sim1 (tail boolObs) Empty
+                    | otherwise
+                        -> ( tlog  today [matchContractToObs o values]  [u2] )
+                                                   : (sim1 (tail boolObs) Empty)
 --
 
 -- Checks fot the right obsevable in the list
 matchContractToObs o [] = (O(nameObs o, False))
 matchContractToObs o (ob:obs) | eqComp o ob = ob
-                              | otherwise = matchContractToObs o (tail obs)
+                              | otherwise = matchContractToObs o obs
 --
 
 

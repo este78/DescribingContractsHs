@@ -249,7 +249,7 @@ rPrint :: Contract -> String
 rPrint c = case c of
     Zero -> indent 1 "Contract with no obligations, no rights."
     One k->  " " ++ show k 
-    Give u -> indent 2 "PAY " ++ pPrint u
+    Give u -> indent 2 "GIVE " ++ pPrint u
     And u1 u2-> rPrint u1 ++ indent 2 "AND" ++ indent 1 ( rPrint u2 )
     Or u1 u2 -> indent 2 "OPTION " ++ rPrint u1 ++ indent 1 "OR" ++ indent 2 "OPTION " ++ rPrint u2
     Cond (IsTrue (O(o1,o2))) u1 u2 -> indent 1 "IF "++ o1 ++ " is " ++ show o2 ++ indent 2 (rPrint u1) ++ indent 1 "OTHERWISE" ++ indent 2(rPrint u2)
