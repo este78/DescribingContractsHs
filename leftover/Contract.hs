@@ -1,3 +1,6 @@
+--This program was developed by, and is copyright © 2007 by Anton van Straaten. 
+--It may be freely used and copied for educational purposes.
+
 module Contract where
  
 --import List
@@ -8,7 +11,16 @@ import Data.Maybe
 --import Text.XHtml.Strict
 --import Data.Unique
 
-data Currency = USD | GBP | EUR | RMB | JPY | CHF  deriving (Eq, Show)
+--Notational conventions from paper
+--c, d, u : Contract
+--      o : Observable
+--   t, s : Date, time
+--      k : Currency
+--      x : Dimensionless real value
+--      p : Value process
+--      v : Random variable
+
+data Currency = USD | GBP | EUR | KYD | ZAR | CHF  deriving (Eq, Show)
 
 type Date = (CalendarTime, TimeStep)
 type TimeStep = Int
@@ -34,12 +46,14 @@ data Contract =
   | Until   (Obs Bool)   Contract
   deriving Show
 
-newtype Obs a = Obs (Date -> PR a)
+--newtype Obs a = Obs (Date -> a)
+newtype Obs a = Obs (Date ->PR a)
 
 instance Show a => Show (Obs a) where
   show (Obs o) = let (PR (rv:_)) = o time0 in "(Obs " ++ show rv ++ ")"
 
-  
+
+--Primitives for Defining Contracts  
 zero :: Contract
 zero = Zero                                  -- A contract with no rights nor obligations
 
@@ -70,19 +84,28 @@ anytime = Anytime
 cUntil :: Obs Bool -> Contract -> Contract
 cUntil = Until
 
-konst :: a -> Obs a
+--Other combinator derived from the primitives above
+andGive :: Contract -> Contract -> Contract
+andGive c d = c `cAnd` give d
+
+--Primitives over observables 
+
+konst :: a -> Obs a					--konst x is an observable that has value x at any time
 konst k = Obs (\t -> bigK k)
+
 
 lift :: (a -> b) -> Obs a -> Obs b
 lift f (Obs o) = Obs (\t -> PR $ map (map f) (unPr $ o t))
 
-
 lift2 :: (a -> b -> c) -> Obs a -> Obs b -> Obs c
 lift2 f (Obs o1) (Obs o2) = Obs (\t -> PR $ zipWith (zipWith f) (unPr $ o1 t) (unPr $ o2 t))
 
+--"The value of the observable date at date t is just t."
 date :: Obs Date
 date = Obs (\t -> PR $ timeSlices [t])
 
+--"All numeric operations lift to the Obs type. The implementation is simple,
+--using lift and lift2."
 instance Num a => Num (Obs a) where
   fromInteger i = konst (fromInteger i)
   (+) = lift2 (+)
@@ -91,15 +114,19 @@ instance Num a => Num (Obs a) where
   abs = lift abs
   signum = lift signum
 
+--We need to define a stub for Eq to support the Num instance.
 instance Eq a => Eq (Obs a) where
   (==) = undefined
 
+--We can't implement Eq on an Observable's function,
+--but we can provide a lifted version of equality:
 (==*) :: Ord a => Obs a -> Obs a -> Obs Bool
 (==*) = lift2 (==)
 
-at :: Date -> Obs Bool
+at :: Date -> Obs Bool       --boolean observable that becomes True at time t
 at t = date ==* konst t
 
+--defining relational operations to work as typeclasses
 (%<), (%<=), (%=), (%>=), (%>) :: Ord a => Obs a -> Obs a -> Obs Bool
 (%<)  = lift2 (<)
 (%<=) = lift2 (<=)
@@ -107,6 +134,7 @@ at t = date ==* konst t
 (%>=) = lift2 (>=)
 (%>)  = lift2 (>)
 
+--Option Contracts
 european :: Date -> Contract -> Contract
 european t u = cWhen (at t) (u `cOr` zero)
 
@@ -122,18 +150,40 @@ between t1 t2 = lift2 (&&) (date %>= konst t1) (date %<= konst t2)
 --								    opt :: Contract
 --								    opt = anytime (perhaps t2 u)
 
+
+
+
+
+
+
+--Value Processes
+
+--a value process PR is represented as a list of random variables
+--RV a, with the random variable corresponding to the earliest time
+--step appearing first in the list.
 newtype PR a = PR { unPr :: [RV a] } deriving Show
 
+
+--A random variable <code>RV a</code> describes the possible values 
+--for a value process at a particular time step.  For example, 
+--the random variable describing the outcome of a dice throw would be 
+--[1,2,3,4,5,6]. Random variables are therefore implemented as simple lists.
 type RV a = [a]
 
+--takePr</code> truncates a (possibly infinite) value process.
 takePr :: Int -> PR a -> PR a
 takePr n (PR rvs) = PR $ take n rvs
 
+--horizonPr determines the number of time steps in a value process.
 horizonPr :: PR a -> Int
 horizonPr (PR rvs) = length rvs
 
+--andPr returns True if every value in a value process is true, false otherwise.
 andPr :: PR Bool -> Bool
 andPr (PR rvs) = all and rvs -- and (map and rvs)
+
+
+--Model
 
 data Model = Model {
   modelStart :: Date,
@@ -163,10 +213,10 @@ exampleModel modelDate = Model {
     rateModels = [(CHF, rates 7   0.8)
                 ,(EUR, rates 6.5 0.25)
                 ,(GBP, rates 8   0.5)
-                ,(JPY, rates 11  1.2)
-				,(RMB, rates 15  1.5)
-                ,(USD, rates 5   1)
-                ]
+                ,(KYD, rates 11  1.2)
+				,(USD, rates 5   1)
+				,(ZAR, rates 15  1.5)
+                                ]
     
     rateModel :: Currency -> PR Double
     rateModel k =
@@ -175,7 +225,10 @@ exampleModel modelDate = Model {
       -- case lookup k rateModels of
       --   Just x -> x
       --   Nothing -> error $ "rateModel: currency not found " ++ (show k)
-      
+    
+--The primitive (disc t k) maps a real-valued random variable at date T,
+--expressed in currency k, to its "fair" equivalent stochastic(random) value 
+--process in the same currency k.	
     disc :: Currency -> (PR Bool, PR Double) -> PR Double
     disc k (PR bs, PR rs) = PR $ discCalc bs rs (unPr $ rateModel k)
       where

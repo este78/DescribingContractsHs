@@ -90,7 +90,7 @@ processDay y m d = let y' = fromInteger y
 --gets a date from a day number
 toDate :: Int -> Date 
 toDate g = let y = convertToYear g ; d = convertToDays g y ; m = convertToMonth d ;  
-                        in C(dYear y m, dMonth m, dDay d m)
+                        in C(dYear (correctYear g y) m, dMonth m, dDay d m)
                       
 
 --Day to Date Inner Workings
@@ -99,10 +99,17 @@ convertToYear :: Int -> Integer
 convertToYear g = toInteger((10000*g + 14780) `div` 3652425)
 
 convertToDays :: Int -> Integer -> Int
-convertToDays g y = let y' = fromInteger y in  g - (365*y' + y' `div` 4 - y' `div` 100 + y' `div` 400)
+convertToDays g y = let y' = fromInteger y ; g' =  g - (365*y' + y' `div` 4 - y' `div` 100 + y' `div` 400)
+                     in convertToDays' y' g g'
+                                          
+convertToDays' y' g  g' | g' < 0 = g - (365*(y'-1) + (y'-1) `div` 4 - (y'-1) `div` 100 + (y'-1) `div` 400)
+                        |otherwise = g'
 
 convertToMonth :: Int -> Int
 convertToMonth d = (100*d + 52) `div` 3060
+
+correctYear g y  | (convertToDays g y) < 0 = y
+                 | otherwise = (y-1)
 
 --Final Step to Calculate de Date
 dYear :: Integer -> Int -> Integer

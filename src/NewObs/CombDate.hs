@@ -5,9 +5,11 @@ module CombDate where
 -- ===================================================================================================================================================================	  
 
 
-data Date = C (Integer,Int,Int) deriving (Show, Eq, Ord, Read)  
+data Date = C (Integer,Int,Int) 
+   deriving (Show, Eq, Ord, Read)  
 
-data Day =  Day Integer deriving (Show, Eq, Ord, Read)
+data Day =  Day Integer 
+    deriving (Show, Eq, Ord, Read)
 
 instance Num Day where
     Day x + Day y = Day(x+y)

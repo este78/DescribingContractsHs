@@ -15,7 +15,9 @@ data Condition =
     deriving (Show, Read)
 --
 
-data Currency = USD | GBP | EUR | RMB | JPY | CHF | Rate String deriving (Eq, Show, Read)
+data Currency = USD | GBP | EUR | RMB | JPY | CHF 
+                | Rate String 
+                deriving (Eq, Show, Read)
 
 --Representation of a contract
 data Contract =

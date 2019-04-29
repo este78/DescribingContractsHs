@@ -1,0 +1,15 @@
+[
+When (O("string", C(2019,04,05)))
+                 (Scale (O("myContract", 32000))
+				                         (One  EUR)
+				  )
+,
+When (O("European Option",C(2019,04,05)))
+                             Or                                                      
+							   (When (O(" ",C(2019,10,10)))
+								          (Scale ((O("6 month LIBOR", 0.035)) )
+							 			                            (One  CHF))
+										  )
+												  Zero
+							   )	 
+]
