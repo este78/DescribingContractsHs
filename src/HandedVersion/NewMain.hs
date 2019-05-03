@@ -86,7 +86,7 @@ simulation1Raw =
 
 -- Loan Contract ============================================================
 contractSim2 =
-     putStrLn ("\nCar Microsft: "++ rPrint microsoft ++ "\n")
+     putStrLn ("\n Microsft: "++ rPrint microsoft ++ "\n")
  
 simulation2 = 
      putStrLn (
@@ -96,7 +96,7 @@ simulation2 =
 simulation2Raw= putStrLn ("\n" ++ show (sim2 doubObs microsoft) ++ "\n" )
 
 contractSim2' =
-     putStrLn ("\nCar Intel: "++ rPrint intel ++ "\n")
+     putStrLn ("\n Intel: "++ rPrint intel ++ "\n")
  
 simulation2' = 
      putStrLn (
