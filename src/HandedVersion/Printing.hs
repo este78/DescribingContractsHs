@@ -49,7 +49,6 @@ rPrint c = case c of
     Until (At(O(o1,o2))) u 
            -> indent 0 "Until " ++ o1 ++ " " ++ rPrint u ++ "\n"
   
-    Empty  -> indent 1 "Contract Exercised"
 
 --Same as print but for PAYABLE contracts
 pPrint :: Contract -> String
@@ -88,6 +87,5 @@ pPrint u = case u of
 
     Until (At (O(o1,o2))) u 
           -> indent 0 "Until " ++ o1  ++ " " ++ pPrint u ++ "\n"
- 
-    Empty -> indent 1 "Contract Exercised"
+
 -- 

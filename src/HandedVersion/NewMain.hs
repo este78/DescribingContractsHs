@@ -27,7 +27,13 @@ main =do
         pause
         simulation2
         pause
-        simulation2Raw 
+        simulation2Raw
+        pause
+        contractSim2'
+        pause
+        simulation2'
+        pause
+        simulation2Raw' 
         pause
         contractSim3
         pause
@@ -68,7 +74,7 @@ simulation1 =
                 "\nHedger Contract: "  ++ 
                (prettyPrint (sim1  boolObs wContractR)) ++ "\n" ++ 
                 "Speculator Contract: " ++ 
-               (prettyPrint (sim1 boolObs wContractP) ++ "\n") 
+               (prettyPrint (sim1 boolObs wContractP)) ++ "\n" 
               )
 
 --show the raw data
@@ -80,21 +86,32 @@ simulation1Raw =
 
 -- Loan Contract ============================================================
 contractSim2 =
-     putStrLn ("\nCar Loan: "++ rPrint carLoan ++ "\n")
+     putStrLn ("\nCar Microsft: "++ rPrint microsoft ++ "\n")
  
 simulation2 = 
      putStrLn (
-                (prettyPrint (sim2 doubObs carLoan)) ++ "\n" 
+                (prettyPrint (sim2 doubObs microsoft)) ++ "\n" 
               )
 
-simulation2Raw= putStrLn ("\n" ++ show (sim2 doubObs carLoan) ++ "\n" ) 
+simulation2Raw= putStrLn ("\n" ++ show (sim2 doubObs microsoft) ++ "\n" )
+
+contractSim2' =
+     putStrLn ("\nCar Intel: "++ rPrint intel ++ "\n")
+ 
+simulation2' = 
+     putStrLn (
+                (prettyPrint (sim2 doubObs intel)) ++ "\n" 
+              )
+
+simulation2Raw'= putStrLn ("\n" ++ show (sim2 doubObs intel) ++ "\n" ) 
 
 -- Option Contract ==========================================================
+
 contractSim3 = 
      putStrLn ("\nOption Contract: " ++ rPrint eurOption ++ "\n")
 
 simulation3 = 
      putStrLn (
-                prettyPrint (sim3 dObs eurOption) ++ "\n"
+                prettyPrint (sim3 bObs eurOption) ++ "\n"
               )
 

@@ -30,8 +30,7 @@ data Contract =
   | Scale   (Obs Double) Contract          
   | When    Condition Contract
   | Anytime Condition Contract            
-  | Until   Condition Contract 
-  | Empty   
+  | Until   Condition Contract   
   deriving (Show, Read)
 
 
@@ -66,8 +65,6 @@ anytime = Anytime
 cUntil :: Condition -> Contract -> Contract
 cUntil = Until
 
-empty :: Contract
-empty = Empty
 
 -- ==========================================================================
 --                  OTHER USEFUL FUNCTIONS - ACTUALLY NOT IN USE       
@@ -92,14 +89,12 @@ between :: Date -> Date -> Obs Bool
 between t1 t2 = konst (O( ((date2String t1) ++ " and " ++ (date2String t2)), (mkDate time0) )) ( (mkDate time0) >= t1 && (mkDate time0) <= t2)
 
 -- ==========================================================================
---  Examples of Types of Contracts
+--  Examples of Types of Composite combinators
 -- ==========================================================================
 --Forward (fwd) Contract Defintion
 --fwd :: Obs a -> Currency -> Contract
 fwd t q k =  cWhen (t) (scale ((konst q)(valObs q)) (one k)) 
 
-swap ::  Contract -> Contract -> Contract
-swap c1 c2 =   c1 `cAnd` (give c2)
 
 --european :: Obs Date -> Contract -> Contract
 european t c = cWhen (t) (c `cOr` zero)

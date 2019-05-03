@@ -67,7 +67,7 @@ sim1 ((today,values):boolObs) c =
                               | otherwise 
                                   -> (tlog today [] [] ) : (sim1 boolObs c)
 
-                Empty -> (tlog today [] [Empty] ) : (sim1 (tail boolObs) Empty)
+                Zero -> (tlog today [] [Zero] ) : (sim1 (tail boolObs) Zero)
 --
 -- Once the main clause of a contract is activated, 
 -- look inside for other clauses												  
@@ -75,10 +75,10 @@ activateContract today values c =
              case c of
                Cond (IsTrue o) u1 u2 
                     | valObs(matchContractToObs o values) == True
-                       -> ( tlog  today [o]  [u1] ): sim1 (tail boolObs) Empty
+                       -> ( tlog  today [o]  [u1] ): sim1 (tail boolObs) Zero
                     | otherwise
                        -> ( tlog  today [matchContractToObs o values]  [u2] )
-                                                : (sim1 (tail boolObs) Empty)
+                                                : (sim1 (tail boolObs) Zero)
 --
 
 -- Checks for the right obsevable in the list, tor produce 
